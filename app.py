@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from pokemontcgsdk import Card
 from pokemontcgsdk import Set
 from pokemontcgsdk import Type
@@ -7,7 +8,7 @@ from pokemontcgsdk import Subtype
 from pokemontcgsdk import Rarity
 import streamlit as st
 
-os.environ['POKEMONTCG_IO_API_KEY'] = 'e7054604-7781-4e38-b164-0adc8552a081'
+os.environ['POKEMONTCG_IO_API_KEY'] = os.getenv('POKEMONTCG_IO_API_KEY')
 
 # Set up the Streamlit app
 st.title("Pokémon Card Finder")
