@@ -8,8 +8,15 @@ from pokemontcgsdk import Subtype
 from pokemontcgsdk import Rarity
 import streamlit as st
 
-os.environ['POKEMONTCG_IO_API_KEY'] = os.getenv('POKEMONTCG_IO_API_KEY')
+# Load environment variables from .env file
+load_dotenv()
 
+# Set the API key for the Pokémon TCG SDK
+api_key = os.getenv('POKEMONTCG_IO_API_KEY')
+if api_key:
+    os.environ['POKEMONTCG_IO_API_KEY'] = api_key
+else:
+    st.error("API key not found. Please set the POKEMONTCG_IO_API_KEY environment variable.")
 # Set up the Streamlit app
 st.title("Pokémon Card Finder")
 
