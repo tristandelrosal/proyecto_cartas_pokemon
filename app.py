@@ -61,7 +61,7 @@ from PIL import Image
 import pandas as pd
 
 # Cargar el modelo
-model = load_model('pokemon_card_predictor.keras')
+model = load_model('model\pokemon_card_predictor.keras')
 
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
