@@ -11,6 +11,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from PIL import Image
 import pandas as pd
+import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,6 +28,8 @@ else:
 
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
+    if isinstance(image_path, np.ndarray):
+        image_path = io.BytesIO(image_path)
     image = Image.open(image_path)
     image = image.resize(image_size)
     image = np.array(image)
@@ -106,4 +109,3 @@ if card_id:
             st.write("Market price not available.")
     except Exception as e:
         st.error(f"Error fetching card: {e}")
-    
