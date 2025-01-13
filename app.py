@@ -1,11 +1,6 @@
 import os
 from dotenv import load_dotenv
 from pokemontcgsdk import Card
-from pokemontcgsdk import Set
-from pokemontcgsdk import Type
-from pokemontcgsdk import Supertype
-from pokemontcgsdk import Subtype
-from pokemontcgsdk import Rarity
 import streamlit as st
 import numpy as np
 from tensorflow.keras.models import load_model
@@ -71,7 +66,6 @@ uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["
 
 if uploaded_image is not None:
 
-    image = load_and_preprocess_image(uploaded_image)
     predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
     st.write(f'Predicted Label: {predicted_label}')
