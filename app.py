@@ -49,40 +49,58 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
     return predicted_class[0]
 
 
-
-# Función para obtener los datos de la gráfica de precios
-def obtener_precios_cardmarket(id_carta):
-    # URL base con el ID de la carta
-    url = f"https://www.cardmarket.com/en/Pokemon/Products/Singles/{id_carta}"
-    
-    # Enviar la solicitud GET
+# Función para extraer los precios de la gráfica
+def obtener_precios_cardmarket(url_carta):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
-    response = requests.get(url, headers=headers)
+
+    response = requests.get(url_carta, headers=headers)
 
     if response.status_code != 200:
-        print(f"Error al acceder a la página: {response.status_code}")
+        print(f"Error al acceder a la página de la carta: {response.status_code}")
         return None
 
-    # Analizar el HTML con BeautifulSoup
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Extraer datos de la gráfica (normalmente en formato JSON o en etiquetas <script>)
-    script_tag = soup.find("script", text=re.compile("chartData"))  # Busca el script que contiene "chartData"
-    
+    # Buscar el script con los datos de la gráfica
+    script_tag = soup.find("script", text=re.compile("chartData"))
     if not script_tag:
         print("No se encontró información de la gráfica en la página.")
         return None
-    
-    # Extraer el JSON de la gráfica
+
+    # Extraer los datos JSON de la gráfica
     json_data_match = re.search(r'chartData = (\[.*?\]);', script_tag.string)
     if json_data_match:
-        precios_json = json_data_match.group(1)
-        return precios_json
+        return json.loads(json_data_match.group(1))  # Convertir a lista Python
     else:
-        print("No se pudo extraer el JSON de precios.")
+        print("No se pudo extraer `chartData` del script.")
         return None
+
+# Función para guardar los datos en un archivo JSON
+def guardar_datos_json(datos, nombre_archivo="precios.json"):
+    with open(nombre_archivo, "w") as archivo:
+        json.dump(datos, archivo, indent=4)
+    print(f"Datos guardados en {nombre_archivo}")
+
+# Función para graficar los datos desde el JSON
+def graficar_datos_json(nombre_archivo="precios.json"):
+    with open(nombre_archivo, "r") as archivo:
+        datos = json.load(archivo)
+
+    fechas = [datetime.strptime(fecha, "%Y-%m-%d") for fecha, _ in datos]
+    precios = [precio for _, precio in datos]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(fechas, precios, marker='o', linestyle='-', color='b', label="Precio (€)")
+    plt.title("Evolución de Precios de la Carta", fontsize=16)
+    plt.xlabel("Fecha", fontsize=12)
+    plt.ylabel("Precio (€)", fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(alpha=0.5)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+    plt.show()
 
 # Set the API key for the Pokémon TCG SDK
 api_key = os.getenv('POKEMONTCG_IO_API_KEY')
@@ -140,11 +158,10 @@ if uploaded_image is not None:
                 if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
                     market_price = card.cardmarket.prices.averageSellPrice
             
-            datos_json = obtener_precios_cardmarket(card_id)
-            
-            
-            # Convertir los datos JSON a una lista de pares (fecha, precio)
-            datos = json.loads(datos_json)
+            url_carta  = obtener_precios_cardmarket(card_id)
+            precios = obtener_precios_cardmarket(url_carta)
+            graficar_datos_json()
+
 
             # Separar las fechas y precios
             fechas = [datetime.strptime(fecha, "%Y-%m-%d") for fecha, _ in datos]
