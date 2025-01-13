@@ -38,6 +38,7 @@ def load_and_preprocess_image(image_path, image_size=(128, 128)):
     image = image / 255.0  # Normalizar la imagen
     return image
 
+
 # Función para predecir el ID de una carta
 def predict_card_id(image_path, model, image_size=(128, 128)):
     image = load_and_preprocess_image(image_path, image_size)
@@ -71,7 +72,7 @@ uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["
 if uploaded_image is not None:
 
     image = load_and_preprocess_image(uploaded_image)
-    predicted_class = predict_card_id(image, model)
+    predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
     st.write(f'Predicted Label: {predicted_label}')
     
