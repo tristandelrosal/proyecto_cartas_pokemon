@@ -61,7 +61,14 @@ from PIL import Image
 import pandas as pd
 
 # Cargar el modelo
-model = load_model('model\pokemon_card_predictor.keras')
+model_path = 'model/pokemon_card_predictor.keras'
+if not os.path.exists(model_path):
+    st.error(f"The model file '{model_path}' does not exist.")
+else:
+    try:
+        model = load_model(model_path)
+    except ValueError as e:
+        st.error(f"Error loading model: {e}")
 
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
