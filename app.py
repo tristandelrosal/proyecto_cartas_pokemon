@@ -27,20 +27,20 @@ else:
         st.error(f"Error loading model: {e}")
 
 # Función para cargar y procesar una imagen
-def load_and_preprocess_image(image_path, image_size=(128, 128)):
-    if isinstance(image_path, np.ndarray):
-        image_path = io.BytesIO(image_path)
-    image = Image.open(image_path)
-    image = image.resize(image_size)
-    image = np.array(image)
-    if image.shape[-1] == 4:  # Si la imagen tiene un canal alfa, eliminarlo
-        image = image[..., :3]
-    image = image / 255.0  # Normalizar la imagen
-    return image
+def load_and_preprocess_image(uploaded_file, image_size=(128, 128)):
+    try:
+        image = Image.open(uploaded_file)
+        image = image.resize(image_size)
+        image = np.array(image)
+        if image.shape[-1] == 4:  # Si la imagen tiene un canal alfa, eliminarlo
+            image = image[..., :3]
+        image = image / 255.0  # Normalizar la imagen
+        return image
+    except Exception as e:
+        raise ValueError(f"Error loading image: {e}")
 
 # Función para predecir el ID de una carta
-def predict_card_id(image_path, model, image_size=(128, 128)):
-    image = load_and_preprocess_image(image_path, image_size)
+def predict_card_id(image, model, image_size=(128, 128)):
     image = np.expand_dims(image, axis=0)  # Añadir una dimensión para el batch
     predictions = model.predict(image)
     predicted_class = np.argmax(predictions, axis=1)
@@ -65,47 +65,48 @@ if __name__ == "__main__":
     predicted_label = id_to_label[predicted_class]
     st.write(f'Predicted Label: {predicted_label}')
 
-# Input for uploading an image
+# Main Streamlit app
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 
 if uploaded_image is not None:
+    try:
+        image = load_and_preprocess_image(uploaded_image)
+        predicted_class = predict_card_id(image, model)
+        predicted_label = id_to_label[predicted_class]
+        st.write(f'Predicted Label: {predicted_label}')
+        
+        card_id = predicted_label
 
-    image = load_and_preprocess_image(uploaded_image)
-    predicted_class = predict_card_id(image, model)
-    predicted_label = id_to_label[predicted_class]
-    st.write(f'Predicted Label: {predicted_label}')
-    
-    card_id = predicted_label
-
-
-    # Fetch and display the card details
-    if card_id:
-        try:
-            card = Card.find(card_id)
-            st.image(card.images.small)
-            st.write(f"**Name:** {card.name}")
-            st.write(f"**Set:** {card.set.name}")
-            st.write(f"**Type:** {', '.join(card.types)}")
-            st.write(f"**Rarity:** {card.rarity}")
-            st.write(f"**HP:** {card.hp}")
-            st.write(f"**Supertype:** {card.supertype}")
-            st.write(f"**Subtype:** {', '.join(card.subtypes)}")
-            
-            # Display market price from TCGPlayer
-            market_price = None
-            if hasattr(card, 'tcgplayer') and card.tcgplayer:
-                if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
-                    if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
-                        market_price = card.tcgplayer.prices.normal.market
-            
-            # If market price not found in TCGPlayer, check Cardmarket
-            if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
-                if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
-                    market_price = card.cardmarket.prices.averageSellPrice
-            
-            if market_price:
-                st.write(f"**Market Price:** ${market_price}")
-            else:
-                st.write("Market price not available.")
-        except Exception as e:
-            st.error(f"Error fetching card: {e}")
+        # Fetch and display the card details
+        if card_id:
+            try:
+                card = Card.find(card_id)
+                st.image(card.images.small)
+                st.write(f"**Name:** {card.name}")
+                st.write(f"**Set:** {card.set.name}")
+                st.write(f"**Type:** {', '.join(card.types)}")
+                st.write(f"**Rarity:** {card.rarity}")
+                st.write(f"**HP:** {card.hp}")
+                st.write(f"**Supertype:** {card.supertype}")
+                st.write(f"**Subtype:** {', '.join(card.subtypes)}")
+                
+                # Display market price from TCGPlayer
+                market_price = None
+                if hasattr(card, 'tcgplayer') and card.tcgplayer:
+                    if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
+                        if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
+                            market_price = card.tcgplayer.prices.normal.market
+                
+                # If market price not found in TCGPlayer, check Cardmarket
+                if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
+                    if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
+                        market_price = card.cardmarket.prices.averageSellPrice
+                
+                if market_price:
+                    st.write(f"**Market Price:** ${market_price}")
+                else:
+                    st.write("Market price not available.")
+            except Exception as e:
+                st.error(f"Error fetching card: {e}")
+    except ValueError as e:
+        st.error(e)
