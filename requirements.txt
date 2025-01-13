@@ -2,3 +2,4 @@ pokemontcgsdk
 streamlit
 python-dotenv
 tensorflow
+bs4
