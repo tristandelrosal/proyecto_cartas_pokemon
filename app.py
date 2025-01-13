@@ -90,7 +90,7 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
 
 if __name__ == "__main__":
     # Cargar el DataFrame para obtener el mapeo de IDs
-    df = pd.read_csv('cards_with_variations.csv')
+    df = pd.read_csv('./data/cards_with_variations.csv')
     id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').cat.categories)}
 
     # Probar el modelo con una nueva imagen
