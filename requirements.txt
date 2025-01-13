@@ -1,3 +1,4 @@
 pokemontcgsdk
 streamlit
 python-dotenv
+tensorflow
