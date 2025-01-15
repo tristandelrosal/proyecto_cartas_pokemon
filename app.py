@@ -48,67 +48,34 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
     predicted_class = np.argmax(predictions, axis=1)
     return predicted_class[0]
 
-# Clase personalizada para manejar errores
-class CardMarketError(Exception):
-    pass
 
-# Función para buscar una carta en el buscador de Cardmarket
-def buscar_carta_cardmarket(nombre_carta):
-    url_busqueda = "https://www.cardmarket.com/en/Pokemon/MainPage/search"
-    params = {"searchString": nombre_carta}
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-
-    response = requests.get(url_busqueda, params=params, headers=headers)
-    print(f"Searching for card: {nombre_carta}")
-    print(f"Response status code: {response.status_code}")
-
-    if response.status_code != 200:
-        raise CardMarketError(f"Error al realizar la búsqueda: {response.status_code}")
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # Buscar el primer resultado en los resultados de búsqueda
-    resultado = soup.find("a", class_="product-link", href=True)
-    if resultado:
-        url_carta = "https://www.cardmarket.com" + resultado["href"]
-        print(f"Found card URL: {url_carta}")
-        return url_carta
-    else:
-        raise CardMarketError("No se encontró ningún resultado para la carta.")
-
-# Función para extraer los precios de la gráfica de una carta específica
+# Función para extraer los precios de la gráfica
 def obtener_precios_cardmarket(url_carta):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
 
     response = requests.get(url_carta, headers=headers)
-    print(f"Fetching URL: {url_carta}")
-    print(f"Response status code: {response.status_code}")
 
     if response.status_code != 200:
-        raise CardMarketError(f"Error al acceder a la página de la carta: {response.status_code}")
+        print(f"Error al acceder a la página de la carta: {response.status_code}")
+        return None
 
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Buscar el script con los datos de la gráfica
     script_tag = soup.find("script", text=re.compile("chartData"))
     if not script_tag:
-        raise CardMarketError("No se encontró información de la gráfica en la página.")
-    print("Found script tag with chartData")
+        print("No se encontró información de la gráfica en la página.")
+        return None
 
     # Extraer los datos JSON de la gráfica
     json_data_match = re.search(r'chartData = (\[.*?\]);', script_tag.string)
     if json_data_match:
-        print("Extracted chartData from script tag")
-        chart_data = json.loads(json_data_match.group(1))
-        print(f"Chart data: {chart_data}")
-        return chart_data  # Convertir a lista Python
+        return json.loads(json_data_match.group(1))  # Convertir a lista Python
     else:
-        raise CardMarketError("No se pudo extraer `chartData` del script.")
+        print("No se pudo extraer `chartData` del script.")
+        return None
 
 # Función para guardar los datos en un archivo JSON
 def guardar_datos_json(datos, nombre_archivo="precios.json"):
@@ -116,8 +83,12 @@ def guardar_datos_json(datos, nombre_archivo="precios.json"):
         json.dump(datos, archivo, indent=4)
     print(f"Datos guardados en {nombre_archivo}")
 
-# Función para graficar los datos desde el archivo JSON
+# Función para graficar los datos desde el JSON
 def graficar_datos_json(nombre_archivo="precios.json"):
+    if not os.path.exists(nombre_archivo):
+        st.error(f"The file '{nombre_archivo}' does not exist.")
+        return
+
     with open(nombre_archivo, "r") as archivo:
         datos = json.load(archivo)
 
@@ -139,7 +110,7 @@ def graficar_datos_json(nombre_archivo="precios.json"):
 api_key = os.getenv('POKEMONTCG_IO_API_KEY')
 if api_key:
     os.environ['POKEMONTCG_IO_API_KEY'] = api_key
-    
+
 # Set up the Streamlit app
 st.title("Pokémon Card Finder")
 
@@ -161,7 +132,7 @@ if uploaded_image is not None:
     predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
     st.write(f'Predicted Label: {predicted_label}')
-    
+
     card_id = predicted_label
 
     # Fetch and display the card details
@@ -176,28 +147,30 @@ if uploaded_image is not None:
             st.write(f"**HP:** {card.hp}")
             st.write(f"**Supertype:** {card.supertype}")
             st.write(f"**Subtype:** {', '.join(card.subtypes)}")
-            
+
             # Display market price from TCGPlayer
             market_price = None
             if hasattr(card, 'tcgplayer') and card.tcgplayer:
                 if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
                     if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
                         market_price = card.tcgplayer.prices.normal.market
-            
+
             # If market price not found in TCGPlayer, check Cardmarket
             if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
                 if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
                     market_price = card.cardmarket.prices.averageSellPrice
-            
-            try:
-                precios = obtener_precios_cardmarket(card_id)
-                if precios:
-                    guardar_datos_json(precios)
-                    graficar_datos_json()
-                else:
-                    print("No precios data found.")
-            except CardMarketError as e:
-                st.error(f"Error fetching card prices: {e}")
+
+            # Example base URL for Cardmarket
+            base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
+
+            # Replace spaces with hyphens and remove special characters
+            formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
+            url_carta = f"{base_url}{formatted_set_name}/{card_id}"
+
+            precios = obtener_precios_cardmarket(url_carta)
+            if precios:
+                guardar_datos_json(precios)
+                graficar_datos_json()
             
             st.write(f"precios: {precios}")
 
@@ -206,4 +179,3 @@ if uploaded_image is not None:
             else:
                 st.write("Market price not available.")
         except Exception as e:
-            st.error(f"Error fetching card: {e}")
