@@ -179,3 +179,4 @@ if uploaded_image is not None:
             else:
                 st.write("Market price not available.")
         except Exception as e:
+            st.write("Market price not available.")
