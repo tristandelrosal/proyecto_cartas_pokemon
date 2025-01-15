@@ -85,6 +85,10 @@ def guardar_datos_json(datos, nombre_archivo="precios.json"):
 
 # Función para graficar los datos desde el JSON
 def graficar_datos_json(nombre_archivo="precios.json"):
+    if not os.path.exists(nombre_archivo):
+        st.error(f"The file '{nombre_archivo}' does not exist.")
+        return
+
     with open(nombre_archivo, "r") as archivo:
         datos = json.load(archivo)
 
@@ -164,7 +168,9 @@ if uploaded_image is not None:
             url_carta = f"{base_url}{formatted_set_name}/{card_id}"
             
             precios = obtener_precios_cardmarket(url_carta)
-            graficar_datos_json()
+            if precios:
+                guardar_datos_json(precios)
+                graficar_datos_json()
 
             if market_price:
                 st.write(f"**Market Price:** ${market_price}")
