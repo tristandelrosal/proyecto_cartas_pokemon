@@ -171,6 +171,8 @@ if uploaded_image is not None:
             if precios:
                 guardar_datos_json(precios)
                 graficar_datos_json()
+            
+            st.write(f"precios: {precios}")
 
             if market_price:
                 st.write(f"**Market Price:** ${market_price}")
