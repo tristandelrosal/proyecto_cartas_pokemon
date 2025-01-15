@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from pokemontcgsdk import Card
 import streamlit as st
 import numpy as np
-from tensorflow.keras.models import load_model
 from PIL import Image
 import pandas as pd
 import io
@@ -13,17 +12,19 @@ import re
 import json
 import matplotlib.pyplot as plt
 from datetime import datetime
+import pickle
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Cargar el modelo
-model_path = 'model/pokemon_card_predictor.keras'
+model_path = 'model/pokemon_card_classifier.pkl'
 if not os.path.exists(model_path):
     st.error(f"The model file '{model_path}' does not exist.")
 else:
     try:
-        model = load_model(model_path)
+        with open(model_path, 'rb') as file:
+            model = pickle.load(file)
     except ValueError as e:
         st.error(f"Error loading model: {e}")
 
