@@ -59,6 +59,8 @@ def obtener_precios_cardmarket(url_carta):
     }
 
     response = requests.get(url_carta, headers=headers)
+    print(f"Fetching URL: {url_carta}")
+    print(f"Response status code: {response.status_code}")
 
     if response.status_code != 200:
         raise CardMarketError(f"Error al acceder a la página de la carta: {response.status_code}")
@@ -69,10 +71,12 @@ def obtener_precios_cardmarket(url_carta):
     script_tag = soup.find("script", text=re.compile("chartData"))
     if not script_tag:
         raise CardMarketError("No se encontró información de la gráfica en la página.")
+    print("Found script tag with chartData")
 
     # Extraer los datos JSON de la gráfica
     json_data_match = re.search(r'chartData = (\[.*?\]);', script_tag.string)
     if json_data_match:
+        print("Extracted chartData from script tag")
         return json.loads(json_data_match.group(1))  # Convertir a lista Python
     else:
         raise CardMarketError("No se pudo extraer `chartData` del script.")
