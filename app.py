@@ -49,6 +49,9 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
     return predicted_class[0]
 
 
+class CardMarketError(Exception):
+    pass
+
 # Función para extraer los precios de la gráfica
 def obtener_precios_cardmarket(url_carta):
     headers = {
@@ -58,24 +61,21 @@ def obtener_precios_cardmarket(url_carta):
     response = requests.get(url_carta, headers=headers)
 
     if response.status_code != 200:
-        print(f"Error al acceder a la página de la carta: {response.status_code}")
-        return None
+        raise CardMarketError(f"Error al acceder a la página de la carta: {response.status_code}")
 
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Buscar el script con los datos de la gráfica
     script_tag = soup.find("script", text=re.compile("chartData"))
     if not script_tag:
-        print("No se encontró información de la gráfica en la página.")
-        return None
+        raise CardMarketError("No se encontró información de la gráfica en la página.")
 
     # Extraer los datos JSON de la gráfica
     json_data_match = re.search(r'chartData = (\[.*?\]);', script_tag.string)
     if json_data_match:
         return json.loads(json_data_match.group(1))  # Convertir a lista Python
     else:
-        print("No se pudo extraer `chartData` del script.")
-        return None
+        raise CardMarketError("No se pudo extraer `chartData` del script.")
 
 # Función para guardar los datos en un archivo JSON
 def guardar_datos_json(datos, nombre_archivo="precios.json"):
@@ -167,10 +167,13 @@ if uploaded_image is not None:
             formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
             url_carta = f"{base_url}{formatted_set_name}/{card_id}"
             
-            precios = obtener_precios_cardmarket(url_carta)
-            if precios:
-                guardar_datos_json(precios)
-                graficar_datos_json()
+            try:
+                precios = obtener_precios_cardmarket(url_carta)
+                if precios:
+                    guardar_datos_json(precios)
+                    graficar_datos_json()
+            except CardMarketError as e:
+                st.error(f"Error fetching card prices: {e}")
             
             st.write(f"precios: {precios}")
 
