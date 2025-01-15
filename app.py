@@ -125,13 +125,11 @@ if __name__ == "__main__":
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 
 if uploaded_image is not None:
-
     predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
     st.write(f'Predicted Label: {predicted_label}')
     
     card_id = predicted_label
-
 
     # Fetch and display the card details
     if card_id:
@@ -158,36 +156,19 @@ if uploaded_image is not None:
                 if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
                     market_price = card.cardmarket.prices.averageSellPrice
             
-            url_carta  = obtener_precios_cardmarket(card_id)
+            # Example base URL for Cardmarket
+            base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
+
+            # Replace spaces with hyphens and remove special characters
+            formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
+            url_carta = f"{base_url}{formatted_set_name}/{card_id}"
+            
             precios = obtener_precios_cardmarket(url_carta)
             graficar_datos_json()
 
-
-            # Separar las fechas y precios
-            fechas = [datetime.strptime(fecha, "%Y-%m-%d") for fecha, _ in datos]
-            precios = [precio for _, precio in datos]
-
-            # Crear la gráfica
-            plt.figure(figsize=(10, 6))
-            plt.plot(fechas, precios, marker='o', linestyle='-', color='b', label="Precio (€)")
-
-            # Configurar etiquetas y título
-            plt.title("Evolución de Precios de la Carta", fontsize=16)
-            plt.xlabel("Fecha", fontsize=12)
-            plt.ylabel("Precio (€)", fontsize=12)
-            plt.xticks(rotation=45)  # Rotar etiquetas del eje X
-            plt.grid(alpha=0.5)  # Agregar una cuadrícula suave
-            plt.legend(fontsize=12)
-
-            # Mostrar la gráfica
-            plt.tight_layout()  # Ajustar los márgenes
-            plt.show()
-            
             if market_price:
                 st.write(f"**Market Price:** ${market_price}")
             else:
                 st.write("Market price not available.")
         except Exception as e:
             st.error(f"Error fetching card: {e}")
-            
-            
