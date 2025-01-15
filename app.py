@@ -77,7 +77,9 @@ def obtener_precios_cardmarket(url_carta):
     json_data_match = re.search(r'chartData = (\[.*?\]);', script_tag.string)
     if json_data_match:
         print("Extracted chartData from script tag")
-        return json.loads(json_data_match.group(1))  # Convertir a lista Python
+        chart_data = json.loads(json_data_match.group(1))
+        print(f"Chart data: {chart_data}")
+        return chart_data  # Convertir a lista Python
     else:
         raise CardMarketError("No se pudo extraer `chartData` del script.")
 
@@ -176,6 +178,8 @@ if uploaded_image is not None:
                 if precios:
                     guardar_datos_json(precios)
                     graficar_datos_json()
+                else:
+                    print("No precios data found.")
             except CardMarketError as e:
                 st.error(f"Error fetching card prices: {e}")
             
