@@ -48,11 +48,38 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
     predicted_class = np.argmax(predictions, axis=1)
     return predicted_class[0]
 
-
+# Clase personalizada para manejar errores
 class CardMarketError(Exception):
     pass
 
-# Función para extraer los precios de la gráfica
+# Función para buscar una carta en el buscador de Cardmarket
+def buscar_carta_cardmarket(nombre_carta):
+    url_busqueda = "https://www.cardmarket.com/en/Pokemon/MainPage/search"
+    params = {"searchString": nombre_carta}
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    response = requests.get(url_busqueda, params=params, headers=headers)
+    print(f"Searching for card: {nombre_carta}")
+    print(f"Response status code: {response.status_code}")
+
+    if response.status_code != 200:
+        raise CardMarketError(f"Error al realizar la búsqueda: {response.status_code}")
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Buscar el primer resultado en los resultados de búsqueda
+    resultado = soup.find("a", class_="product-link", href=True)
+    if resultado:
+        url_carta = "https://www.cardmarket.com" + resultado["href"]
+        print(f"Found card URL: {url_carta}")
+        return url_carta
+    else:
+        raise CardMarketError("No se encontró ningún resultado para la carta.")
+
+# Función para extraer los precios de la gráfica de una carta específica
 def obtener_precios_cardmarket(url_carta):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -89,12 +116,8 @@ def guardar_datos_json(datos, nombre_archivo="precios.json"):
         json.dump(datos, archivo, indent=4)
     print(f"Datos guardados en {nombre_archivo}")
 
-# Función para graficar los datos desde el JSON
+# Función para graficar los datos desde el archivo JSON
 def graficar_datos_json(nombre_archivo="precios.json"):
-    if not os.path.exists(nombre_archivo):
-        st.error(f"The file '{nombre_archivo}' does not exist.")
-        return
-
     with open(nombre_archivo, "r") as archivo:
         datos = json.load(archivo)
 
@@ -166,15 +189,8 @@ if uploaded_image is not None:
                 if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
                     market_price = card.cardmarket.prices.averageSellPrice
             
-            # Example base URL for Cardmarket
-            base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
-
-            # Replace spaces with hyphens and remove special characters
-            formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
-            url_carta = f"{base_url}{formatted_set_name}/{card_id}"
-            
             try:
-                precios = obtener_precios_cardmarket(url_carta)
+                precios = obtener_precios_cardmarket(card_id)
                 if precios:
                     guardar_datos_json(precios)
                     graficar_datos_json()
