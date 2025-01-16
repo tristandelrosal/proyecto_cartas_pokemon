@@ -138,14 +138,19 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 
 # Input for uploading an image
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
+cropped_image = None
+
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
         cropped_image = Image.open(io.BytesIO(cropped_image))
 
-if cropped_image is not None:
-    predicted_class = predict_card_id(uploaded_image, model)
+# Use cropped_image if available, otherwise use uploaded_image
+image_to_predict = cropped_image if cropped_image is not None else uploaded_image
+
+if image_to_predict is not None:
+    predicted_class = predict_card_id(image_to_predict, model)
     predicted_label = id_to_label[predicted_class]
 
     card_id = predicted_label
