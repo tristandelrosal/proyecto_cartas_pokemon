@@ -17,16 +17,26 @@ import pickle
 # Load environment variables from .env file
 load_dotenv()
 
-# Cargar el modelo
+# Load the model
 model_path = './model/pokemon_card_classifier_shuffled.pkl'
+model = None
+
 if not os.path.exists(model_path):
     st.error(f"The model file '{model_path}' does not exist.")
 else:
     try:
         with open(model_path, 'rb') as file:
             model = pickle.load(file)
-    except ValueError as e:
-        st.error(f"Error loading model: {e}")
+    except (ValueError, pickle.UnpicklingError) as e:
+        st.error(f"Error loading model: {str(e)}")
+        st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
+    except Exception as e:
+        st.error(f"Unexpected error loading model: {str(e)}")
+
+# Function to load and process an image
+def load_and_preprocess_image(image_path, image_size=(128, 128)):
+    if isinstance(image_path, np.ndarray):
+        image_path = io.BytesIO(image_path)
 
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
