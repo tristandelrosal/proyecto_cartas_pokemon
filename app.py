@@ -135,16 +135,9 @@ model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
 model = load_model(model_path)
 
 
-if __name__ == "__main__":
-    # Cargar el DataFrame para obtener el mapeo de IDs
-    df = pd.read_csv('./data/cards_with_variations.csv')
-    id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').cat.categories)}
-
-    # Probar el modelo con una nueva imagen
-    test_image_path = './base3-2_original.png'  # Reemplazar con la ruta de la imagen
-    predicted_class = predict_card_id(test_image_path, model)
-    predicted_label = id_to_label[predicted_class]
-    st.write(f'Predicted Label: {predicted_label}')
+# Cargar el DataFrame para obtener el mapeo de IDs
+df = pd.read_csv('./data/cards_with_variations.csv')
+id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').cat.categories)}
 
 # Input for uploading an image
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
