@@ -33,11 +33,6 @@ else:
     except Exception as e:
         st.error(f"Unexpected error loading model: {str(e)}")
 
-# Function to load and process an image
-def load_and_preprocess_image(image_path, image_size=(128, 128)):
-    if isinstance(image_path, np.ndarray):
-        image_path = io.BytesIO(image_path)
-
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
     if isinstance(image_path, np.ndarray):
