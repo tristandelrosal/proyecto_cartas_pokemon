@@ -149,10 +149,11 @@ if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
-        # Convert cropped image to bytes
-        buf = io.BytesIO()
-        cropped_image.save(buf, format='PNG')
-        cropped_image = buf.getvalue()
+        # Convert cropped image to bytes if it's not already in bytes format
+        if isinstance(cropped_image, Image.Image):
+            buf = io.BytesIO()
+            cropped_image.save(buf, format='PNG')
+            cropped_image = buf.getvalue()
 
 # Use cropped_image if available, otherwise use uploaded_image
 image_to_predict = cropped_image if cropped_image is not None else uploaded_image
