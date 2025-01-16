@@ -155,7 +155,7 @@ if uploaded_image is not None:
                 
             with col2:
                 st.write(f"Carta encontrada | id: {card_id}")
-                st.image(card.images.small)
+                st.image(card.images.large, use_container_width=True)
             
             st.write(f"**Name:** {card.name}")
             st.write(f"**Set:** {card.set.name}")
