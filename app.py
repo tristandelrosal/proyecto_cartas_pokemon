@@ -18,7 +18,11 @@ from joblib import load as joblib_load
 load_dotenv()
 
 # Set the title and icon for the Streamlit app
-st.set_page_config(page_title="Pokémon Card Finder", page_icon="favicon.ico")
+st.set_page_config(page_title="Pokémon Card Finder", page_icon="img/favicon.ico")
+
+# Display the header image
+header_image_path = "/img/Pokémon_Trading_Card_Game_logo.png"
+st.image(header_image_path, use_container_width=True)
 
 def load_model(model_path):
     """Load and validate the model using joblib"""
@@ -123,10 +127,9 @@ api_key = os.getenv('POKEMONTCG_IO_API_KEY')
 if api_key:
     os.environ['POKEMONTCG_IO_API_KEY'] = api_key
     
-    # Load the model
+# Load the model
 model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
 model = load_model(model_path)
-
 
 # Cargar el DataFrame para obtener el mapeo de IDs
 df = pd.read_csv('./data/cards_with_variations.csv')
@@ -196,4 +199,4 @@ if uploaded_image is not None:
             else:
                 st.write("Market price not available.")
         except Exception as e:
-            st.write("Market price not available.")
+            st.error(f"Error fetching card: {e}")
