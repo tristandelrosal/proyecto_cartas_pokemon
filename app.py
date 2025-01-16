@@ -135,6 +135,7 @@ model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
 model = load_model(model_path)
 
 
+
 # Cargar el DataFrame para obtener el mapeo de IDs
 df = pd.read_csv('./data/cards_with_variations.csv')
 id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').cat.categories)}
@@ -147,6 +148,8 @@ if uploaded_image is not None:
     predicted_label = id_to_label[predicted_class]
 
     card_id = predicted_label
+    
+    st.write(f"**Predicted Card ID:** {card_id}")
 
     # Fetch and display the card details
     if card_id:
