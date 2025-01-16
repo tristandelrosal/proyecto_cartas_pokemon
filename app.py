@@ -148,14 +148,14 @@ if uploaded_image is not None:
         try:
             card = Card.find(card_id)
             
-            # col1, col2 = st.colums()
-            # with col1:
-            st.write("Carta subida")
-            st.image(uploaded_image, use_column_width=True)
+            col1, col2 = st.colums()
+            with col1:
+                st.write("Carta subida")
+                st.image(uploaded_image, use_container_width=True)
                 
-            # with col2:
-            st.write("Carta encontrada | id: {card_id}")
-            st.image(card.images.small)
+            with col2:
+                st.write("Carta encontrada | id: {card_id}")
+                st.image(card.images.small)
             
             st.write(f"**Name:** {card.name}")
             st.write(f"**Set:** {card.set.name}")
