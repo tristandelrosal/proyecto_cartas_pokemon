@@ -13,6 +13,7 @@ import json
 import matplotlib.pyplot as plt
 from datetime import datetime
 from joblib import load as joblib_load
+from streamlit_cropperjs import st_cropperjs
 
 # Load environment variables from .env file
 load_dotenv()
@@ -137,6 +138,11 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 
 # Input for uploading an image
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
+if uploaded_image is not None:
+    uploaded_image = uploaded_image.read()
+    cropped_image = st_cropperjs(uploaded_image, aspect_ratio=1.0, box_width=300, box_height=300)
+    if cropped_image is not None:
+        uploaded_image = cropped_image
 
 if uploaded_image is not None:
     predicted_class = predict_card_id(uploaded_image, model)

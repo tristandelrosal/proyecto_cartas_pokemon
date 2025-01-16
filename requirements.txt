@@ -6,3 +6,4 @@ bs4
 matplotlib
 joblib
 scikit-learn
+streamlit_cropperjs
