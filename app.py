@@ -31,7 +31,7 @@ def load_model(model_path):
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
         return None
 
-def load_and_preprocess_image(image_path, image_size=(128, 128)):
+def load_and_preprocess_image(image_path, image_size=(256, 256)):
     """Load and preprocess image for RandomForestClassifier"""
     if isinstance(image_path, np.ndarray):
         image_path = io.BytesIO(image_path)
@@ -51,7 +51,7 @@ def load_and_preprocess_image(image_path, image_size=(128, 128)):
     return image
 
 
-def predict_card_id(image_path, model, image_size=(128, 128)):
+def predict_card_id(image_path, model, image_size=(256, 256)):
     """Predict card ID with proper error handling"""
     if model is None:
         st.error("Model not loaded. Cannot make predictions.")
@@ -66,7 +66,7 @@ def predict_card_id(image_path, model, image_size=(128, 128)):
         return None
 
 # Load the model
-model_path = './model/pokemon_card_classifier_shuffled.pkl'
+model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
 model = load_model(model_path)
 
 # Función para extraer los precios de la gráfica
