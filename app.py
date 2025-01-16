@@ -34,24 +34,17 @@ def load_model(model_path):
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
         return None
 
+
 def load_and_preprocess_image(image_path, image_size=(256, 256)):
-    """Load and preprocess image for RandomForestClassifier"""
-    if isinstance(image_path, np.ndarray):
-        image_path = io.BytesIO(image_path)
-    
-    image = Image.open(image_path)
-    image = image.resize(image_size)
-    image = np.array(image)
-    
-    # Remove alpha channel if present
-    if image.shape[-1] == 4:
-        image = image[..., :3]
-    
-    # Normalize and flatten the image
-    image = image / 255.0
-    image = image.reshape(1, -1)  # Flatten to 2D array (1, width*height*channels)
-    
-    return image
+    try:
+        image = Image.open(image_path).convert('RGB')  # Convertir a RGB
+        image = image.resize(image_size)
+        image = np.array(image)
+        image = image.reshape(1, -1)  # Flatten to 2D array (1, width*height*channels)
+        return image
+    except Exception as e:
+        print(f"Error loading image {image_path}: {e}")
+        return None
 
 
 def predict_card_id(image_path, model, image_size=(256, 256)):
@@ -133,7 +126,6 @@ if api_key:
     # Load the model
 model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
 model = load_model(model_path)
-
 
 
 # Cargar el DataFrame para obtener el mapeo de IDs
