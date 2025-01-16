@@ -31,33 +31,38 @@ def load_model(model_path):
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
         return None
 
-def load_model(model_path):
-    """Load and validate the model using joblib"""
-    if not os.path.exists(model_path):
-        st.error(f"The model file '{model_path}' does not exist.")
+def load_and_preprocess_image(image_path, image_size=(128, 128)):
+    """Load and preprocess image for RandomForestClassifier"""
+    if isinstance(image_path, np.ndarray):
+        image_path = io.BytesIO(image_path)
+    
+    image = Image.open(image_path)
+    image = image.resize(image_size)
+    image = np.array(image)
+    
+    # Remove alpha channel if present
+    if image.shape[-1] == 4:
+        image = image[..., :3]
+    
+    # Normalize and flatten the image
+    image = image / 255.0
+    image = image.reshape(1, -1)  # Flatten to 2D array (1, width*height*channels)
+    
+    return image
+
+
+def predict_card_id(image_path, model, image_size=(128, 128)):
+    """Predict card ID with proper error handling"""
+    if model is None:
+        st.error("Model not loaded. Cannot make predictions.")
         return None
     
     try:
-        model = joblib_load(model_path)
-        return model
+        image = load_and_preprocess_image(image_path, image_size)
+        predictions = model.predict(image)
+        return predictions[0]
     except Exception as e:
-        st.error(f"Error loading model: {str(e)}")
-        st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
-        return None
-
-
-def load_model(model_path):
-    """Load and validate the model using joblib"""
-    if not os.path.exists(model_path):
-        st.error(f"The model file '{model_path}' does not exist.")
-        return None
-    
-    try:
-        model = joblib_load(model_path)
-        return model
-    except Exception as e:
-        st.error(f"Error loading model: {str(e)}")
-        st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
+        st.error(f"Error during prediction: {str(e)}")
         return None
 
 # Load the model
