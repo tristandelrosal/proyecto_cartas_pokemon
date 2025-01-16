@@ -142,9 +142,9 @@ if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
-        uploaded_image = cropped_image
+        cropped_image = Image.open(io.BytesIO(cropped_image))
 
-if uploaded_image is not None:
+if cropped_image is not None:
     predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
 
