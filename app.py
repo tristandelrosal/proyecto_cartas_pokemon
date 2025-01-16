@@ -23,7 +23,7 @@ st.set_page_config(page_title="Pokémon Card Finder", page_icon="./img/favicon.i
 
 # Display the header image
 header_image_path = "./img/Pokémon_Trading_Card_Game_logo.png"
-st.image(header_image_path, use_container_width=True)
+st.image(header_image_path, use_column_width=True)
 
 def load_model(model_path):
     """Load and validate the model using joblib"""
@@ -39,27 +39,27 @@ def load_model(model_path):
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
         return None
 
-
-def load_and_preprocess_image(image_path, image_size=(256, 256)):
+def load_and_preprocess_image(image_data, image_size=(256, 256)):
     try:
-        image = Image.open(image_path).convert('RGB')  # Convertir a RGB
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')  # Convert to RGB
         image = image.resize(image_size)
         image = np.array(image)
         image = image.reshape(1, -1)  # Flatten to 2D array (1, width*height*channels)
         return image
     except Exception as e:
-        print(f"Error loading image {image_path}: {e}")
+        st.error(f"Error loading image: {e}")
         return None
 
-
-def predict_card_id(image_path, model, image_size=(256, 256)):
+def predict_card_id(image_data, model, image_size=(256, 256)):
     """Predict card ID with proper error handling"""
     if model is None:
         st.error("Model not loaded. Cannot make predictions.")
         return None
     
     try:
-        image = load_and_preprocess_image(image_path, image_size)
+        image = load_and_preprocess_image(image_data, image_size)
+        if image is None:
+            return None
         predictions = model.predict(image)
         return predictions[0]
     except Exception as e:
@@ -151,63 +151,66 @@ image_to_predict = cropped_image if cropped_image is not None else uploaded_imag
 
 if image_to_predict is not None:
     predicted_class = predict_card_id(image_to_predict, model)
-    predicted_label = id_to_label[predicted_class]
+    if predicted_class is not None:
+        predicted_label = id_to_label[predicted_class]
 
-    card_id = predicted_label
-    
-    st.write(f"**Predicted Card ID:** {card_id}")
+        card_id = predicted_label
+        
+        st.write(f"**Predicted Card ID:** {card_id}")
 
-    # Fetch and display the card details
-    if card_id:
-        try:
-            card = Card.find(card_id)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("Carta subida")
-                st.image(uploaded_image, use_container_width=True)
+        # Fetch and display the card details
+        if card_id:
+            try:
+                card = Card.find(card_id)
                 
-            with col2:
-                st.write(f"Carta encontrada | id: {card_id}")
-                st.image(card.images.large, use_container_width=True)
-            
-            st.write(f"**Name:** {card.name}")
-            st.write(f"**Set:** {card.set.name}")
-            st.write(f"**Type:** {', '.join(card.types)}")
-            st.write(f"**Rarity:** {card.rarity}")
-            st.write(f"**HP:** {card.hp}")
-            st.write(f"**Supertype:** {card.supertype}")
-            st.write(f"**Subtype:** {', '.join(card.subtypes)}")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("Carta subida")
+                    st.image(uploaded_image, use_container_width=True)
+                    
+                with col2:
+                    st.write(f"Carta encontrada | id: {card_id}")
+                    st.image(card.images.large, use_container_width=True)
+                
+                st.write(f"**Name:** {card.name}")
+                st.write(f"**Set:** {card.set.name}")
+                st.write(f"**Type:** {', '.join(card.types)}")
+                st.write(f"**Rarity:** {card.rarity}")
+                st.write(f"**HP:** {card.hp}")
+                st.write(f"**Supertype:** {card.supertype}")
+                st.write(f"**Subtype:** {', '.join(card.subtypes)}")
 
-            # Display market price from TCGPlayer
-            market_price = None
-            if hasattr(card, 'tcgplayer') and card.tcgplayer:
-                if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
-                    if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
-                        market_price = card.tcgplayer.prices.normal.market
+                # Display market price from TCGPlayer
+                market_price = None
+                if hasattr(card, 'tcgplayer') and card.tcgplayer:
+                    if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
+                        if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
+                            market_price = card.tcgplayer.prices.normal.market
 
-            # If market price not found in TCGPlayer, check Cardmarket
-            if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
-                if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
-                    market_price = card.cardmarket.prices.averageSellPrice
+                # If market price not found in TCGPlayer, check Cardmarket
+                if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
+                    if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
+                        market_price = card.cardmarket.prices.averageSellPrice
 
-            # Example base URL for Cardmarket
-            base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
+                # Example base URL for Cardmarket
+                base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
 
-            # Replace spaces with hyphens and remove special characters
-            formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
-            url_carta = f"{base_url}{formatted_set_name}/{card_id}"
+                # Replace spaces with hyphens and remove special characters
+                formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
+                url_carta = f"{base_url}{formatted_set_name}/{card_id}"
 
-            precios = obtener_precios_cardmarket(url_carta)
-            if precios:
-                guardar_datos_json(precios)
-                graficar_datos_json()
-            
-            st.write(f"precios: {precios}")
+                precios = obtener_precios_cardmarket(url_carta)
+                if precios:
+                    guardar_datos_json(precios)
+                    graficar_datos_json()
+                
+                st.write(f"precios: {precios}")
 
-            if market_price:
-                st.write(f"**Market Price:** ${market_price}")
-            else:
-                st.write("Market price not available.")
-        except Exception as e:
-            st.error(f"Error fetching card: {e}")
+                if market_price:
+                    st.write(f"**Market Price:** ${market_price}")
+                else:
+                    st.write("Market price not available.")
+            except Exception as e:
+                st.error(f"Error fetching card: {e}")
+    else:
+        st.error("Prediction failed. Please try again with a different image.")
