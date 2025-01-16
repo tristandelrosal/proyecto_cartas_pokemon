@@ -18,7 +18,7 @@ import pickle
 load_dotenv()
 
 # Cargar el modelo
-model_path = 'model/pokemon_card_classifier_shuffled.pkl'
+model_path = './model/pokemon_card_classifier_shuffled.pkl'
 if not os.path.exists(model_path):
     st.error(f"The model file '{model_path}' does not exist.")
 else:

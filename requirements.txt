@@ -4,3 +4,4 @@ python-dotenv
 tensorflow
 bs4
 matplotlib
+scikit-learn
