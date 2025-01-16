@@ -12,7 +12,7 @@ import re
 import json
 import matplotlib.pyplot as plt
 from datetime import datetime
-import pickle
+from joblib import load as joblib_load
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,13 +25,11 @@ if not os.path.exists(model_path):
     st.error(f"The model file '{model_path}' does not exist.")
 else:
     try:
-        with open(model_path, 'rb') as file:
-            model = pickle.load(file)
-    except (ValueError, pickle.UnpicklingError) as e:
+        model = joblib_load(model_path)
+    except Exception as e:
         st.error(f"Error loading model: {str(e)}")
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
-    except Exception as e:
-        st.error(f"Unexpected error loading model: {str(e)}")
+
 
 # Función para cargar y procesar una imagen
 def load_and_preprocess_image(image_path, image_size=(128, 128)):
