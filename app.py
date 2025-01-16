@@ -23,7 +23,7 @@ st.set_page_config(page_title="Pokémon Card Finder", page_icon="./img/favicon.i
 
 # Display the header image
 header_image_path = "./img/Pokémon_Trading_Card_Game_logo.png"
-st.image(header_image_path, use_column_width=True)
+st.image(header_image_path, use_container_width=True)
 
 def load_model(model_path):
     """Load and validate the model using joblib"""
@@ -149,7 +149,10 @@ if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
-        cropped_image = Image.open(io.BytesIO(cropped_image))
+        # Convert cropped image to bytes
+        buf = io.BytesIO()
+        cropped_image.save(buf, format='PNG')
+        cropped_image = buf.getvalue()
 
 # Use cropped_image if available, otherwise use uploaded_image
 image_to_predict = cropped_image if cropped_image is not None else uploaded_image
