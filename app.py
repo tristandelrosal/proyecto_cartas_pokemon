@@ -148,7 +148,7 @@ if uploaded_image is not None:
         try:
             card = Card.find(card_id)
             
-            col1, col2 = st.colums()
+            col1, col2 = st.colums(2)
             with col1:
                 st.write("Carta subida")
                 st.image(uploaded_image, use_container_width=True)
