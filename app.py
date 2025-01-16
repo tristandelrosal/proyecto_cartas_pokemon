@@ -18,10 +18,10 @@ from joblib import load as joblib_load
 load_dotenv()
 
 # Set the title and icon for the Streamlit app
-st.set_page_config(page_title="Pokémon Card Finder", page_icon="img/favicon.ico")
+st.set_page_config(page_title="Pokémon Card Finder", page_icon="./img/favicon.ico")
 
 # Display the header image
-header_image_path = "/img/Pokémon_Trading_Card_Game_logo.png"
+header_image_path = "./img/Pokémon_Trading_Card_Game_logo.png"
 st.image(header_image_path, use_container_width=True)
 
 def load_model(model_path):
