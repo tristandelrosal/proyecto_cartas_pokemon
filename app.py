@@ -41,6 +41,11 @@ def load_model(model_path):
 
 def load_and_preprocess_image(image_data, image_size=(256, 256)):
     try:
+        if isinstance(image_data, Image.Image):
+            # Convert PIL image to bytes
+            buf = io.BytesIO()
+            image_data.save(buf, format='PNG')
+            image_data = buf.getvalue()
         image = Image.open(io.BytesIO(image_data)).convert('RGB')  # Convert to RGB
         image = image.resize(image_size)
         image = np.array(image)
@@ -167,7 +172,7 @@ if image_to_predict is not None:
                 with col1:
                     st.write("Carta subida")
                     st.image(uploaded_image, use_container_width=True)
-                    
+                
                 with col2:
                     st.write(f"Carta encontrada | id: {card_id}")
                     st.image(card.images.large, use_container_width=True)
