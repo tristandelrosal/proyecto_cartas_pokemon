@@ -17,41 +17,52 @@ from joblib import load as joblib_load
 # Load environment variables from .env file
 load_dotenv()
 
-# Load the model
-model_path = './model/pokemon_card_classifier_shuffled.pkl'
-model = None
-
-if not os.path.exists(model_path):
-    st.error(f"The model file '{model_path}' does not exist.")
-else:
+def load_model(model_path):
+    """Load and validate the model using joblib"""
+    if not os.path.exists(model_path):
+        st.error(f"The model file '{model_path}' does not exist.")
+        return None
+    
     try:
         model = joblib_load(model_path)
+        return model
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
         st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
+        return None
+
+def load_model(model_path):
+    """Load and validate the model using joblib"""
+    if not os.path.exists(model_path):
+        st.error(f"The model file '{model_path}' does not exist.")
+        return None
+    
+    try:
+        model = joblib_load(model_path)
+        return model
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
+        return None
 
 
-# Función para cargar y procesar una imagen
-def load_and_preprocess_image(image_path, image_size=(128, 128)):
-    if isinstance(image_path, np.ndarray):
-        image_path = io.BytesIO(image_path)
-    image = Image.open(image_path)
-    image = image.resize(image_size)
-    image = np.array(image)
-    if image.shape[-1] == 4:  # Si la imagen tiene un canal alfa, eliminarlo
-        image = image[..., :3]
-    image = image / 255.0  # Normalizar la imagen
-    return image
+def load_model(model_path):
+    """Load and validate the model using joblib"""
+    if not os.path.exists(model_path):
+        st.error(f"The model file '{model_path}' does not exist.")
+        return None
+    
+    try:
+        model = joblib_load(model_path)
+        return model
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        st.error("The model file appears to be corrupted. Please ensure it was saved correctly.")
+        return None
 
-
-# Función para predecir el ID de una carta
-def predict_card_id(image_path, model, image_size=(128, 128)):
-    image = load_and_preprocess_image(image_path, image_size)
-    image = np.expand_dims(image, axis=0)  # Añadir una dimensión para el batch
-    predictions = model.predict(image)
-    predicted_class = np.argmax(predictions, axis=1)
-    return predicted_class[0]
-
+# Load the model
+model_path = './model/pokemon_card_classifier_shuffled.pkl'
+model = load_model(model_path)
 
 # Función para extraer los precios de la gráfica
 def obtener_precios_cardmarket(url_carta):
