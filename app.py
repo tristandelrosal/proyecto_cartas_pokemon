@@ -154,7 +154,7 @@ if uploaded_image is not None:
                 st.image(uploaded_image, use_container_width=True)
                 
             with col2:
-                st.write("Carta encontrada | id: {card_id}")
+                st.write(f"Carta encontrada | id: {card_id}")
                 st.image(card.images.small)
             
             st.write(f"**Name:** {card.name}")
