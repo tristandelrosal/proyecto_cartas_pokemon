@@ -17,6 +17,9 @@ from joblib import load as joblib_load
 # Load environment variables from .env file
 load_dotenv()
 
+# Set the title and icon for the Streamlit app
+st.set_page_config(page_title="Pokémon Card Finder", page_icon="favicon.ico")
+
 def load_model(model_path):
     """Load and validate the model using joblib"""
     if not os.path.exists(model_path):
@@ -64,10 +67,6 @@ def predict_card_id(image_path, model, image_size=(256, 256)):
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         return None
-
-# Load the model
-model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
-model = load_model(model_path)
 
 # Función para extraer los precios de la gráfica
 def obtener_precios_cardmarket(url_carta):
@@ -130,9 +129,11 @@ def graficar_datos_json(nombre_archivo="precios.json"):
 api_key = os.getenv('POKEMONTCG_IO_API_KEY')
 if api_key:
     os.environ['POKEMONTCG_IO_API_KEY'] = api_key
+    
+    # Load the model
+model_path = './model/pokemon_card_classifier_shuffled_256.pkl'
+model = load_model(model_path)
 
-# Set up the Streamlit app
-st.title("Pokémon Card Finder")
 
 if __name__ == "__main__":
     # Cargar el DataFrame para obtener el mapeo de IDs
@@ -151,7 +152,6 @@ uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["
 if uploaded_image is not None:
     predicted_class = predict_card_id(uploaded_image, model)
     predicted_label = id_to_label[predicted_class]
-    st.write(f'Predicted Label: {predicted_label}')
 
     card_id = predicted_label
 
@@ -159,7 +159,16 @@ if uploaded_image is not None:
     if card_id:
         try:
             card = Card.find(card_id)
-            st.image(card.images.small)
+            
+            col1, col2 = st.colums()
+            with col1:
+                st.write("Carta subida")
+                st.image(uploaded_image, use_column_width=True)
+                
+            with col2:
+                st.write("Carta encontrada | id: {card_id}")
+                st.image(card.images.small)
+            
             st.write(f"**Name:** {card.name}")
             st.write(f"**Set:** {card.set.name}")
             st.write(f"**Type:** {', '.join(card.types)}")
