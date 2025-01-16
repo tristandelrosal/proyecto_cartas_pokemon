@@ -5,3 +5,4 @@ tensorflow
 bs4
 matplotlib
 joblib
+scikit-learn
