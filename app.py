@@ -93,7 +93,7 @@ def get_card_prices_by_id(card_id):
 # Función para mostrar la gráfica
 def plot_prices(prices):
     if not prices:
-        print("No hay precios para mostrar.")
+        st.write("No hay precios para mostrar.")
         return
 
     platforms = list(prices.keys())
@@ -107,6 +107,8 @@ def plot_prices(prices):
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+
+        
 
 # Set the API key for the Pokémon TCG SDK
 api_key = os.getenv('POKEMONTCG_IO_API_KEY')
