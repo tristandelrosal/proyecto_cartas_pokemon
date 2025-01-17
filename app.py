@@ -125,6 +125,8 @@ cropped_image = None
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
+    st.session_state.card_found = False
+    
     # Inicializa el estado de la sesión para cropped_image
     if 'cropped_image' not in st.session_state:
         st.session_state.cropped_image = None
@@ -148,29 +150,42 @@ if uploaded_image is not None:
     col1, col2 = st.columns(2)
     with col1:
         st.write("Carta subida")
-        st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
-    
+        if st.session_state.cropped_image is not None:
+            try:
+                cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
+                st.image(cropped_image, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error al cargar la imagen recortada: {e}")
+        elif uploaded_image is not None:
+            try:
+                uploaded_image = Image.open(uploaded_image)
+                st.image(uploaded_image, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error al cargar la imagen subida: {e}")
+
     with col2:
         if st.button("Predecir carta"):
-        # Use cropped_image if available, otherwise use uploaded_image
-            image_to_predict =  st.session_state.cropped_image if st.session_state.cropped_image is not None else uploaded_image
-            image_to_predict = load_and_preprocess_image(image_to_predict)
-            if image_to_predict is not None:
-                predicted_class = predict_card_id(image_to_predict, model)
-                card_id = id_to_label[predicted_class]
-                
-            # Fetch and display the card details
-            if card_id:
-                try:
-                    card = Card.find(card_id)
-                    st.image(card.images.large, use_container_width=True)
-                    card_found = True
-                except Exception as e:
-                    st.error(f"Error fetching card: {e}")
+            # Use cropped_image if available, otherwise use uploaded_image
+            image_to_predict = st.session_state.cropped_image if st.session_state.cropped_image is not None else uploaded_image
+            try:
+                image_to_predict = Image.open(io.BytesIO(image_to_predict)) if st.session_state.cropped_image else Image.open(image_to_predict)
+                image_to_predict = load_and_preprocess_image(image_to_predict)
+                if image_to_predict is not None:
+                    predicted_class = predict_card_id(image_to_predict, model)
+                    card_id = id_to_label[predicted_class]
                     
-                st.write(f"Carta encontrada | id: {card_id}")
+                    # Fetch and display the card details
+                    if card_id:
+                        try:
+                            card = Card.find(card_id)
+                            st.image(card.images.large, use_container_width=True)
+                            st.session_state.card_found = True
+                        except Exception as e:
+                            st.error(f"Error fetching card: {e}")
+            except Exception as e:
+                st.error(f"Error al procesar la imagen: {e}")
         
-    if card_found:
+    if st.session_state.card_found:
         if predicted_class is not None:
             st.write(f"**Predicted Card ID:** {card_id}")   
             st.write(f"**Name:** {card.name}")
