@@ -190,10 +190,10 @@ if image_to_predict is not None:
                 prices = get_card_prices_by_id(card_id)
                 
                 if prices:
-                    print("Precios obtenidos:", prices)
+                    st.write("Precios obtenidos:", prices)
                     plot_prices(prices)
                 else:
-                    print("No se encontraron precios.")
+                    st.write("No se encontraron precios.")
 
 
                 if market_price:
