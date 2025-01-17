@@ -121,7 +121,7 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
-@st.dialog(width="large")
+@st.dialog("large")
 def cropper(uploaded_image): 
      cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
      if st.button("Recortar"):
