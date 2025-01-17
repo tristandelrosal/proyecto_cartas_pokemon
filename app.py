@@ -145,12 +145,12 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
+# Add a checkbox to control the visibility of the cropper
+show_cropper = st.toggle("Recortar imagen")
+
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
-    # Add a checkbox to control the visibility of the cropper
-    show_cropper = st.checkbox("Recortar imagen")
-
     if show_cropper:
         cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
         if cropped_image is not None:
@@ -160,71 +160,71 @@ if uploaded_image is not None:
                 cropped_image.save(buf, format='PNG')
                 cropped_image = buf.getvalue()
 
-    # Use cropped_image if available, otherwise use uploaded_image
-    image_to_predict = cropped_image if cropped_image is not None else uploaded_image
+# Use cropped_image if available, otherwise use uploaded_image
+image_to_predict = cropped_image if cropped_image is not None else uploaded_image
 
-    if image_to_predict is not None:
-        predicted_class = predict_card_id(image_to_predict, model)
-        if predicted_class is not None:
-            predicted_label = id_to_label[predicted_class]
+if image_to_predict is not None:
+    predicted_class = predict_card_id(image_to_predict, model)
+    if predicted_class is not None:
+        predicted_label = id_to_label[predicted_class]
 
-            card_id = predicted_label
-            
-            st.write(f"**Predicted Card ID:** {card_id}")
+        card_id = predicted_label
+        
+        st.write(f"**Predicted Card ID:** {card_id}")
 
-            # Fetch and display the card details
-            if card_id:
-                try:
-                    card = Card.find(card_id)
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write("Carta subida")
-                        st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
-                    
-                    with col2:
-                        st.write(f"Carta encontrada | id: {card_id}")
-                        st.image(card.images.large, use_container_width=True)
-                    
-                    st.write(f"**Name:** {card.name}")
-                    st.write(f"**Set:** {card.set.name}")
-                    st.write(f"**Type:** {', '.join(card.types)}")
-                    st.write(f"**Rarity:** {card.rarity}")
-                    st.write(f"**HP:** {card.hp}")
-                    st.write(f"**Supertype:** {card.supertype}")
-                    st.write(f"**Subtype:** {', '.join(card.subtypes)}")
+        # Fetch and display the card details
+        if card_id:
+            try:
+                card = Card.find(card_id)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("Carta subida")
+                    st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
+                
+                with col2:
+                    st.write(f"Carta encontrada | id: {card_id}")
+                    st.image(card.images.large, use_container_width=True)
+                
+                st.write(f"**Name:** {card.name}")
+                st.write(f"**Set:** {card.set.name}")
+                st.write(f"**Type:** {', '.join(card.types)}")
+                st.write(f"**Rarity:** {card.rarity}")
+                st.write(f"**HP:** {card.hp}")
+                st.write(f"**Supertype:** {card.supertype}")
+                st.write(f"**Subtype:** {', '.join(card.subtypes)}")
 
-                    # Display market price from TCGPlayer
-                    market_price = None
-                    if hasattr(card, 'tcgplayer') and card.tcgplayer:
-                        if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
-                            if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
-                                market_price = card.tcgplayer.prices.normal.market
+                # Display market price from TCGPlayer
+                market_price = None
+                if hasattr(card, 'tcgplayer') and card.tcgplayer:
+                    if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
+                        if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
+                            market_price = card.tcgplayer.prices.normal.market
 
-                    # If market price not found in TCGPlayer, check Cardmarket
-                    if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
-                        if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
-                            market_price = card.cardmarket.prices.averageSellPrice
+                # If market price not found in TCGPlayer, check Cardmarket
+                if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
+                    if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
+                        market_price = card.cardmarket.prices.averageSellPrice
 
-                    # Example base URL for Cardmarket
-                    base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
+                # Example base URL for Cardmarket
+                base_url = "https://www.cardmarket.com/en/Pokemon/Cards/"
 
-                    # Replace spaces with hyphens and remove special characters
-                    formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
-                    url_carta = f"{base_url}{formatted_set_name}/{card_id}"
+                # Replace spaces with hyphens and remove special characters
+                formatted_set_name = re.sub(r'[^A-Za-z0-9-]', '', card.set.name.replace(' ', '-'))
+                url_carta = f"{base_url}{formatted_set_name}/{card_id}"
 
-                    precios = obtener_precios_cardmarket(url_carta)
-                    if precios:
-                        guardar_datos_json(precios)
-                        graficar_datos_json()
-                    
-                    st.write(f"precios: {precios}")
+                precios = obtener_precios_cardmarket(url_carta)
+                if precios:
+                    guardar_datos_json(precios)
+                    graficar_datos_json()
+                
+                st.write(f"precios: {precios}")
 
-                    if market_price:
-                        st.write(f"**Market Price:** ${market_price}")
-                    else:
-                        st.write("Market price not available.")
-                except Exception as e:
-                    st.error(f"Error fetching card: {e}")
-        else:
-            st.error("Prediction failed. Please try again with a different image.")
+                if market_price:
+                    st.write(f"**Market Price:** ${market_price}")
+                else:
+                    st.write("Market price not available.")
+            except Exception as e:
+                st.error(f"Error fetching card: {e}")
+    else:
+        st.error("Prediction failed. Please try again with a different image.")
