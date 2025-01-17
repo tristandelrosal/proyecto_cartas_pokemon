@@ -7,3 +7,4 @@ matplotlib
 joblib
 scikit-learn
 streamlit_cropperjs
+plotly
