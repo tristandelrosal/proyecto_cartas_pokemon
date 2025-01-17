@@ -127,6 +127,11 @@ show_cropper = st.toggle("Recortar imagen")
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
+    # Inicializa el estado de la sesión para cropped_image
+    if 'cropped_image' not in st.session_state:
+        st.session_state.cropped_image = None
+
+    
     @st.dialog("Recorta tu carta")
     def cropper(uploaded_image):
         if uploaded_image is not None:
