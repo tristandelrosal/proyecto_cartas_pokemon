@@ -91,7 +91,7 @@ def get_card_prices_by_id(card_id):
     
     # Filtrar y renombrar los valores
     relevant_prices = {
-        "De": f"{prices.get('lowPrice', 0):.2f} €",
+        "Desde": f"{prices.get('lowPrice', 0):.2f} €",
         "Tendencia de precio": f"{prices.get('trendPrice', 0):.2f} €",
         "Precio medio 30 días": f"{prices.get('avg30', 0):.2f} €",
         "Precio medio 7 días": f"{prices.get('avg7', 0):.2f} €",
@@ -186,29 +186,15 @@ if image_to_predict is not None:
                 
                 if prices:
                     st.success("Precios obtenidos:")
-                    st.json(prices)  # Mostrar los precios en formato JSON
+                    
+                    # Crear un DataFrame para la gráfica
+                    df = pd.DataFrame({
+                        "Tipo de precio": list(prices.keys()),
+                        "Precio (€)": list(prices.values())
+                    })
 
-                    # Preparar datos para la gráfica
-                    platforms = list(prices.keys())
-                    values = [prices[platform] for platform in platforms]
-
-                     # Crear la gráfica
-                    platforms = list(prices.keys())
-                    values = [float(value.split(" ")[0].replace(",", ".")) for value in prices.values()]
-
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    ax.bar(platforms, values, color="skyblue")
-                    ax.set_title("Precios filtrados y renombrados")
-                    ax.set_xlabel("Tipo de precio")
-                    ax.set_ylabel("Precio (€)")
-                    ax.set_xticks(range(len(platforms)))
-                    ax.set_xticklabels(platforms, rotation=45)
-
-                    # Mostrar valores sobre las barras
-                    for i, value in enumerate(values):
-                        ax.text(i, value + 0.1, f"{value:.2f}€", ha="center", va="bottom", fontsize=10)
-
-                    st.pyplot(fig)  # Mostrar la gráfica en Streamlit
+                    # Mostrar la gráfica utilizando Streamlit
+                    st.bar_chart(data=df.set_index("Tipo de precio"))
                 else:
                     st.write("No se encontraron precios.")
 
