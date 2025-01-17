@@ -121,15 +121,26 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
-@st.dialog("Recorta tu carta")
-def cropper(uploaded_image):
-    if uploaded_image is not None:
-        cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
-        if st.button("Recortar"):
-            st.session_state.cropped_image = cropped_image
-            st.rerun()
-    else:
-        st.warning("Por favor, sube una imagen primero.")
+
+
+# Add a checkbox to control the visibility of the cropper
+show_cropper = st.toggle("Recortar imagen")
+
+if uploaded_image is not None:
+    uploaded_image = uploaded_image.read()
+    
+    @st.dialog("Recorta tu carta")
+    def cropper(uploaded_image):
+        if uploaded_image is not None:
+            cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
+            if st.button("Recortar"):
+                st.session_state.cropped_image = cropped_image
+                st.rerun()
+            if st.button("Continuar sin recortar"):
+                st.session_state.cropped_image = None
+                st.rerun()
+        else:
+            st.warning("Por favor, sube una imagen primero.")
 
 if st.button("Recortar imagen"):
     cropper(uploaded_image)
@@ -138,12 +149,6 @@ if 'cropped_image' in st.session_state:
     st.image(st.session_state.cropped_image)
 else:
     st.info("No hay imagen recortada")
-
-# Add a checkbox to control the visibility of the cropper
-show_cropper = st.toggle("Recortar imagen")
-
-if uploaded_image is not None:
-    uploaded_image = uploaded_image.read()
     
     if show_cropper:
         cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
@@ -211,7 +216,7 @@ if image_to_predict is not None:
                     "Tipo de precio": list(prices.keys()),
                     "Precio (€)": list(prices.values())
                 })
-                    st.write(df["Precio"])
+                    st.write(df["Precio (€)"])
                     # Ordenar los datos por 'Precio (€)' en orden ascendente
                     df = df.sort_values(by="Precio (€)", ascending=True)
 
