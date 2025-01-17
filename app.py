@@ -157,10 +157,12 @@ if uploaded_image is not None:
     #             cropped_image.save(buf, format='PNG')
     #             cropped_image = buf.getvalue()
 
-# Use cropped_image if available, otherwise use uploaded_image
-image_to_predict =  st.session_state.cropped_image if  st.session_state.cropped_image is not None else uploaded_image
 
-if st.button("Predecir carta") and image_to_predict is None:
+if st.button("Predecir carta") and st.session_state.cropped_image is None:
+    # Use cropped_image if available, otherwise use uploaded_image
+    image_to_predict =  st.session_state.cropped_image if  st.session_state.cropped_image is not None else uploaded_image
+    image_to_predict = load_and_preprocess_image(image_to_predict)
+    
     if image_to_predict is not None:
         predicted_class = predict_card_id(image_to_predict, model)
         if predicted_class is not None:
