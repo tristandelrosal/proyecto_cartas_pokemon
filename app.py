@@ -127,6 +127,9 @@ def cropper(uploaded_image):
      if st.button("Recortar"):
          st.session_state.cropped_image = cropped_image
          st.rerun()
+         
+if st.button("Recortar imagen"):
+    cropper(uploaded_image)
     
 if 'cropped_image' in st.session_state:
     st.image(st.session_state.cropped_image)
@@ -205,7 +208,7 @@ if image_to_predict is not None:
                     "Tipo de precio": list(prices.keys()),
                     "Precio (€)": list(prices.values())
                 })
-
+                    st.wr
                     # Ordenar los datos por 'Precio (€)' en orden ascendente
                     df = df.sort_values(by="Precio (€)", ascending=True)
 
