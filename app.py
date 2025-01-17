@@ -149,6 +149,7 @@ if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
+        st.image(cropped_image, use_container_width=True)
         # Convert cropped image to bytes if it's not already in bytes format
         if isinstance(cropped_image, Image.Image):
             buf = io.BytesIO()
