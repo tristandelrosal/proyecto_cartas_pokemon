@@ -88,7 +88,19 @@ def get_card_prices_by_id(card_id):
 
     card = data["data"]  # Datos de la carta
     prices = card.get("cardmarket", {}).get("prices", {})
-    return prices
+    
+    # Filtrar y renombrar los valores
+    relevant_prices = {
+        "De": f"{prices.get('lowPrice', 0):.2f} €",
+        "Tendencia de precio": f"{prices.get('trendPrice', 0):.2f} €",
+        "Precio medio 30 días": f"{prices.get('avg30', 0):.2f} €",
+        "Precio medio 7 días": f"{prices.get('avg7', 0):.2f} €",
+        "Precio medio 1 día": f"{prices.get('avg1', 0):.2f} €"
+    }
+    
+    # Filtrar valores con 0 €
+    filtered_prices = {key: value for key, value in relevant_prices.items() if not value.startswith("0.00")}
+    return filtered_prices
         
 
 # Set the API key for the Pokémon TCG SDK
@@ -180,13 +192,22 @@ if image_to_predict is not None:
                     platforms = list(prices.keys())
                     values = [prices[platform] for platform in platforms]
 
-                    # Crear la gráfica
+                     # Crear la gráfica
+                    platforms = list(prices.keys())
+                    values = [float(value.split(" ")[0].replace(",", ".")) for value in prices.values()]
+
                     fig, ax = plt.subplots(figsize=(10, 6))
                     ax.bar(platforms, values, color="skyblue")
-                    ax.set_title("Precios de la carta según la página web")
-                    ax.set_xlabel("Plataforma")
+                    ax.set_title("Precios filtrados y renombrados")
+                    ax.set_xlabel("Tipo de precio")
                     ax.set_ylabel("Precio (€)")
+                    ax.set_xticks(range(len(platforms)))
                     ax.set_xticklabels(platforms, rotation=45)
+
+                    # Mostrar valores sobre las barras
+                    for i, value in enumerate(values):
+                        ax.text(i, value + 0.1, f"{value:.2f}€", ha="center", va="bottom", fontsize=10)
+
                     st.pyplot(fig)  # Mostrar la gráfica en Streamlit
                 else:
                     st.write("No se encontraron precios.")
