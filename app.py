@@ -121,13 +121,16 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
-@st.dialog()
-def cropper(uploaded_image): 
-     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
-     if st.button("Recortar"):
-         st.session_state.cropped_image = cropped_image
-         st.rerun()
-         
+@st.dialog("Recorta tu carta")
+def cropper(uploaded_image):
+    if uploaded_image is not None:
+        cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
+        if st.button("Recortar"):
+            st.session_state.cropped_image = cropped_image
+            st.rerun()
+    else:
+        st.warning("Por favor, sube una imagen primero.")
+
 if st.button("Recortar imagen"):
     cropper(uploaded_image)
     
@@ -208,7 +211,7 @@ if image_to_predict is not None:
                     "Tipo de precio": list(prices.keys()),
                     "Precio (€)": list(prices.values())
                 })
-                    st.write(df["Precio (€)"])
+                    st.write(df["Precio"])
                     # Ordenar los datos por 'Precio (€)' en orden ascendente
                     df = df.sort_values(by="Precio (€)", ascending=True)
 
@@ -217,6 +220,7 @@ if image_to_predict is not None:
                         df,
                         x="Tipo de precio",
                         y="Precio (€)",
+                        text="Precio (€)",
                         title="Precios de la carta según el tipo",
                         labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
                         color="Precio (€)",  # Colorear barras según su valor
