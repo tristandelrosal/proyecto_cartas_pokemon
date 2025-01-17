@@ -173,18 +173,21 @@ if image_to_predict is not None:
                 prices = get_card_prices_by_id(card_id)
                 
                 if prices:
-                    st.write("Precios obtenidos:", prices)
+                    st.success("Precios obtenidos:")
+                    st.json(prices)  # Mostrar los precios en formato JSON
+
+                    # Preparar datos para la gráfica
                     platforms = list(prices.keys())
                     values = [prices[platform] for platform in platforms]
 
-                    plt.figure(figsize=(10, 6))
-                    plt.bar(platforms, values, color="skyblue")
-                    plt.title("Precios de la carta según la página web")
-                    plt.xlabel("Plataforma")
-                    plt.ylabel("Precio (€)")
-                    plt.xticks(rotation=45)
-                    plt.tight_layout()
-                    plt.show()
+                    # Crear la gráfica
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    ax.bar(platforms, values, color="skyblue")
+                    ax.set_title("Precios de la carta según la página web")
+                    ax.set_xlabel("Plataforma")
+                    ax.set_ylabel("Precio (€)")
+                    ax.set_xticklabels(platforms, rotation=45)
+                    st.pyplot(fig)  # Mostrar la gráfica en Streamlit
                 else:
                     st.write("No se encontraron precios.")
 
