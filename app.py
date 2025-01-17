@@ -153,19 +153,16 @@ if uploaded_image is not None:
             try:
                 cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
                 st.image(cropped_image, use_container_width=True)
+                image_to_predict = load_and_preprocess_image(cropped_image)
             except Exception as e:
                 st.error(f"Error al cargar la imagen recortada: {e}")
         elif uploaded_image is not None:
             st.image(uploaded_image, use_container_width=True)
-
+            image_to_predict = load_and_preprocess_image(uploaded_image)
 
     with col2:
         if st.button("Predecir carta"):
-            # Use cropped_image if available, otherwise use uploaded_image
-            image_to_predict = st.session_state.cropped_image if st.session_state.cropped_image is not None else uploaded_image
             try:
-                image_to_predict = Image.open(io.BytesIO(image_to_predict)) if st.session_state.cropped_image else Image.open(image_to_predict)
-                image_to_predict = load_and_preprocess_image(image_to_predict)
                 if image_to_predict is not None:
                     predicted_class = predict_card_id(image_to_predict, model)
                     card_id = id_to_label[predicted_class]
@@ -180,7 +177,7 @@ if uploaded_image is not None:
                             st.error(f"Error fetching card: {e}")
             except Exception as e:
                 st.error(f"Error al procesar la imagen: {e}")
-        
+            
     if st.session_state.card_found:
         if predicted_class is not None:
             st.write(f"**Predicted Card ID:** {card_id}")   
