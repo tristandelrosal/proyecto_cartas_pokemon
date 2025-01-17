@@ -193,8 +193,30 @@ if image_to_predict is not None:
                         "Precio (€)": list(prices.values())
                     })
 
-                    # Mostrar la gráfica utilizando Streamlit
-                    st.bar_chart(data=df.set_index("Tipo de precio"))
+                    # Crear la gráfica de barras con Plotly
+                    fig = px.bar(
+                        df,
+                        x="Tipo de precio",
+                        y="Precio (€)",
+                        text="Precio (€)",
+                        title="Precios de la carta según el tipo",
+                        labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
+                        color="Precio (€)",  # Colorear barras según su valor
+                        color_continuous_scale="Blues"
+                    )
+
+                    fig.update_traces(texttemplate="€ %{y:.2f}", textposition="outside")
+                    fig.update_layout(
+                        xaxis_title="Tipo de Precio",
+                        yaxis_title="Precio (€)",
+                        uniformtext_minsize=8,
+                        uniformtext_mode="hide",
+                        yaxis=dict(showgrid=True),
+                        xaxis=dict(showgrid=False)
+                    )
+
+                    # Mostrar la gráfica en Streamlit
+                    st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.write("No se encontraron precios.")
 
