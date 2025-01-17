@@ -149,7 +149,9 @@ if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
     if cropped_image is not None:
-        st.image(cropped_image, use_container_width=True)
+        # Display the cropped image if available
+        # st.image(cropped_image, use_container_width=True)
+        
         # Convert cropped image to bytes if it's not already in bytes format
         if isinstance(cropped_image, Image.Image):
             buf = io.BytesIO()
@@ -176,7 +178,7 @@ if image_to_predict is not None:
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write("Carta subida")
-                    st.image(uploaded_image, use_container_width=True)
+                    st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
                 
                 with col2:
                     st.write(f"Carta encontrada | id: {card_id}")
