@@ -121,6 +121,18 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
+@st.dialog(width="large")
+def cropper(uploaded_image): 
+     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
+     if st.button("Recortar"):
+         st.session_state.cropped_image = cropped_image
+         st.rerun()
+    
+if 'cropped_image' in st.session_state:
+    st.image(st.session_state.cropped_image)
+else:
+    st.info("No hay imagen recortada")
+
 # Add a checkbox to control the visibility of the cropper
 show_cropper = st.toggle("Recortar imagen")
 
@@ -190,9 +202,12 @@ if image_to_predict is not None:
                     
                     # Crear un DataFrame para la gráfica
                     df = pd.DataFrame({
-                        "Tipo de precio": list(prices.keys()),
-                        "Precio (€)": list(prices.values())
-                    })
+                    "Tipo de precio": list(prices.keys()),
+                    "Precio (€)": list(prices.values())
+                })
+
+                    # Ordenar los datos por 'Precio (€)' en orden ascendente
+                    df = df.sort_values(by="Precio (€)", ascending=True)
 
                     # Crear la gráfica de barras con Plotly
                     fig = px.bar(
@@ -206,27 +221,81 @@ if image_to_predict is not None:
                         color_continuous_scale="Blues"
                     )
 
-                    fig.update_traces(texttemplate="€ %{y:.2f}", textposition="outside")
+                    # Ajustar la posición del texto y formato
+                    fig.update_traces(
+                        texttemplate="€ %{y:.2f}",
+                        textposition="outside",
+                    )
+
+                    # Asegurarse de que el eje Y empiece desde 0
                     fig.update_layout(
                         xaxis_title="Tipo de Precio",
                         yaxis_title="Precio (€)",
                         uniformtext_minsize=8,
                         uniformtext_mode="hide",
-                        yaxis=dict(showgrid=True),
+                        yaxis=dict(
+                            showgrid=True,
+                            range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
+                        ),
                         xaxis=dict(showgrid=False)
                     )
 
                     # Mostrar la gráfica en Streamlit
+                    st.plotly_chart(fig, use_container_width=True)
+                    df = pd.DataFrame({
+                        "Tipo de precio": list(prices.keys()),
+                        "Precio (€)": list(prices.values())
+                    })
+
+                    # Ordenar los datos por 'Precio (€)' en orden ascendente
+                    df = df.sort_values(by="Precio (€)", ascending=True)
+
+                    # Crear la gráfica de barras con Plotly
+                    fig = px.bar(
+                        df,
+                        x="Tipo de precio",
+                        y="Precio (€)",
+                        text="Precio (€)",
+                        title="Precios de la carta según el tipo",
+                        labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
+                        color="Precio (€)",  # Colorear barras según su valor
+                        color_continuous_scale="Blues"
+                    )
+
+                    # Ajustar la posición del texto y formato
+                    fig.update_traces(
+                        texttemplate="€ %{y:.2f}",
+                        textposition="outside",
+                    )
+
+                    # Asegurarse de que el eje Y empiece desde 0
+                    fig.update_layout(
+                        xaxis_title="Tipo de Precio",
+                        yaxis_title="Precio (€)",
+                        uniformtext_minsize=8,
+                        uniformtext_mode="hide",
+                        yaxis=dict(
+                            showgrid=True,
+                            range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
+                        ),
+                        xaxis=dict(showgrid=False)
+                    )
+
+                    # Mostrar la gráfica en Streamlit
+                    st.plotly_chart(fig, use_container_width=True)
+
+                        # Mostrar la gráfica en Streamlit
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.write("No se encontraron precios.")
 
 
                 if market_price:
-                    st.write(f"**Market Price:** ${market_price}")
+                        st.write(f"**Market Price:** ${market_price}")
                 else:
-                    st.write("Market price not available.")
+                        st.write("Market price not available.")
             except Exception as e:
+                
                 st.error(f"Error fetching card: {e}")
     else:
         st.error("Prediction failed. Please try again with a different image.")
