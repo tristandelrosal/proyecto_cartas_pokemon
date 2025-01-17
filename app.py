@@ -142,11 +142,6 @@ if uploaded_image is not None:
 
     if st.button("Recortar imagen"):
         cropper(uploaded_image)
-        
-    if 'cropped_image' in st.session_state:
-        st.image(st.session_state.cropped_image)
-    else:
-        st.info("No hay imagen recortada")
     
     # if show_cropper:
     #     cropped_image = st_cropperjs(uploaded_image, btn_text="Cortar imagen")
@@ -158,118 +153,118 @@ if uploaded_image is not None:
     #             cropped_image = buf.getvalue()
 
 
-if st.button("Predecir carta") and st.session_state.cropped_image is None:
-    # Use cropped_image if available, otherwise use uploaded_image
-    image_to_predict =  st.session_state.cropped_image if  st.session_state.cropped_image is not None else uploaded_image
-    image_to_predict = load_and_preprocess_image(image_to_predict)
-    
-    if image_to_predict is not None:
-        predicted_class = predict_card_id(image_to_predict, model)
-        if predicted_class is not None:
-            predicted_label = id_to_label[predicted_class]
+    if st.button("Predecir carta") and st.session_state.cropped_image is not None or uploaded_image is not None:
+        # Use cropped_image if available, otherwise use uploaded_image
+        image_to_predict =  st.session_state.cropped_image if  st.session_state.cropped_image is not None else uploaded_image
+        image_to_predict = load_and_preprocess_image(image_to_predict)
+        
+        if image_to_predict is not None:
+            predicted_class = predict_card_id(image_to_predict, model)
+            if predicted_class is not None:
+                predicted_label = id_to_label[predicted_class]
 
-            card_id = predicted_label
-            
-            st.write(f"**Predicted Card ID:** {card_id}")
+                card_id = predicted_label
+                
+                st.write(f"**Predicted Card ID:** {card_id}")
 
-            # Fetch and display the card details
-            if card_id:
-                try:
-                    card = Card.find(card_id)
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write("Carta subida")
-                        st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
-                    
-                    with col2:
-                        st.write(f"Carta encontrada | id: {card_id}")
-                        st.image(card.images.large, use_container_width=True)
-                    
-                    st.write(f"**Name:** {card.name}")
-                    st.write(f"**Set:** {card.set.name}")
-                    st.write(f"**Type:** {', '.join(card.types)}")
-                    st.write(f"**Rarity:** {card.rarity}")
-                    st.write(f"**HP:** {card.hp}")
-                    st.write(f"**Supertype:** {card.supertype}")
-                    st.write(f"**Subtype:** {', '.join(card.subtypes)}")
-
-                    # Display market price from TCGPlayer
-                    market_price = None
-                    if hasattr(card, 'tcgplayer') and card.tcgplayer:
-                        if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
-                            if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
-                                market_price = card.tcgplayer.prices.normal.market
-
-                    # If market price not found in TCGPlayer, check Cardmarket
-                    if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
-                        if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
-                            market_price = card.cardmarket.prices.averageSellPrice
-                            
-                            
-                    prices = get_card_prices_by_id(card_id)
-                    
-                    if prices:
-                        st.success("Precios obtenidos:")
+                # Fetch and display the card details
+                if card_id:
+                    try:
+                        card = Card.find(card_id)
                         
-                        # Crear un DataFrame para la gráfica
-                        df = pd.DataFrame({
-                        "Tipo de precio": list(prices.keys()),
-                        "Precio (€)": list(prices.values())
-                    })
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write("Carta subida")
+                            st.image(cropped_image if cropped_image is not None else uploaded_image, use_container_width=True)
+                        
+                        with col2:
+                            st.write(f"Carta encontrada | id: {card_id}")
+                            st.image(card.images.large, use_container_width=True)
+                        
+                        st.write(f"**Name:** {card.name}")
+                        st.write(f"**Set:** {card.set.name}")
+                        st.write(f"**Type:** {', '.join(card.types)}")
+                        st.write(f"**Rarity:** {card.rarity}")
+                        st.write(f"**HP:** {card.hp}")
+                        st.write(f"**Supertype:** {card.supertype}")
+                        st.write(f"**Subtype:** {', '.join(card.subtypes)}")
 
-                        print(df["Precio (€)"].apply(type))
-                        print(df["Tipo de precio"].apply(type))                    
+                        # Display market price from TCGPlayer
+                        market_price = None
+                        if hasattr(card, 'tcgplayer') and card.tcgplayer:
+                            if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
+                                if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
+                                    market_price = card.tcgplayer.prices.normal.market
 
-                        # Ordenar los datos por 'Precio (€)' en orden ascendente
-                        df = df.sort_values(by="Precio (€)", ascending=True)
+                        # If market price not found in TCGPlayer, check Cardmarket
+                        if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
+                            if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
+                                market_price = card.cardmarket.prices.averageSellPrice
+                                
+                                
+                        prices = get_card_prices_by_id(card_id)
+                        
+                        if prices:
+                            st.success("Precios obtenidos:")
+                            
+                            # Crear un DataFrame para la gráfica
+                            df = pd.DataFrame({
+                            "Tipo de precio": list(prices.keys()),
+                            "Precio (€)": list(prices.values())
+                        })
 
-                        # Crear la gráfica de barras con Plotly
-                        fig = px.bar(
-                            df,
-                            x="Tipo de precio",
-                            y="Precio (€)",
-                            text="Precio (€)",
-                            title="Precios de la carta según el tipo",
-                            labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
-                            color="Precio (€)",  # Colorear barras según su valor
-                            color_continuous_scale="Blues"
-                        )
+                            print(df["Precio (€)"].apply(type))
+                            print(df["Tipo de precio"].apply(type))                    
 
-                        # Ajustar la posición del texto y formato
-                        fig.update_traces(
-                            texttemplate="€ %{y:.2f}",
-                            textposition="outside",
-                        )
+                            # Ordenar los datos por 'Precio (€)' en orden ascendente
+                            df = df.sort_values(by="Precio (€)", ascending=True)
 
-                        # Asegurarse de que el eje Y empiece desde 0
-                        fig.update_layout(
-                            xaxis_title="Tipo de Precio",
-                            yaxis_title="Precio (€)",
-                            uniformtext_minsize=8,
-                            uniformtext_mode="hide",
-                            yaxis=dict(
-                                showgrid=True,
-                                range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
-                            ),
-                            xaxis=dict(showgrid=False)
-                        )
+                            # Crear la gráfica de barras con Plotly
+                            fig = px.bar(
+                                df,
+                                x="Tipo de precio",
+                                y="Precio (€)",
+                                text="Precio (€)",
+                                title="Precios de la carta según el tipo",
+                                labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
+                                color="Precio (€)",  # Colorear barras según su valor
+                                color_continuous_scale="Blues"
+                            )
 
-                        # Mostrar la gráfica en Streamlit
-                        st.plotly_chart(fig, use_container_width=True)
+                            # Ajustar la posición del texto y formato
+                            fig.update_traces(
+                                texttemplate="€ %{y:.2f}",
+                                textposition="outside",
+                            )
+
+                            # Asegurarse de que el eje Y empiece desde 0
+                            fig.update_layout(
+                                xaxis_title="Tipo de Precio",
+                                yaxis_title="Precio (€)",
+                                uniformtext_minsize=8,
+                                uniformtext_mode="hide",
+                                yaxis=dict(
+                                    showgrid=True,
+                                    range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
+                                ),
+                                xaxis=dict(showgrid=False)
+                            )
 
                             # Mostrar la gráfica en Streamlit
-                        st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.write("No se encontraron precios.")
+                            st.plotly_chart(fig, use_container_width=True)
+
+                                # Mostrar la gráfica en Streamlit
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.write("No se encontraron precios.")
 
 
-                    if market_price:
-                            st.write(f"**Market Price:** ${market_price}")
-                    else:
-                            st.write("Market price not available.")
-                except Exception as e:
-                    
-                    st.error(f"Error fetching card: {e}")
-        else:
-            st.error("Prediction failed. Please try again with a different image.")
+                        if market_price:
+                                st.write(f"**Market Price:** ${market_price}")
+                        else:
+                                st.write("Market price not available.")
+                    except Exception as e:
+                        
+                        st.error(f"Error fetching card: {e}")
+            else:
+                st.error("Prediction failed. Please try again with a different image.")
