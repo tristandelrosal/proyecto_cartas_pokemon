@@ -154,13 +154,13 @@ if uploaded_image is not None:
             try:
                 cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
                 st.image(cropped_image, use_container_width=True)
-                uploaded_card_path = './uploaded_images/cropped_card.png'
+                uploaded_card_path = './uploaded_cards/cropped_card.png'
                 cropped_image.save(uploaded_card_path)
             except Exception as e:
                 st.error(f"Error al cargar la imagen recortada: {e}")
         elif uploaded_image is not None:
             st.image(uploaded_image, use_container_width=True)
-            uploaded_card_path = './uploaded_images/uploaded_card.png'
+            uploaded_card_path = './uploaded_cards/uploaded_card.png'
             with open(uploaded_card_path, 'wb') as f:
                 f.write(uploaded_image)
 
