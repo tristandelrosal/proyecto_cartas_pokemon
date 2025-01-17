@@ -121,7 +121,6 @@ id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').ca
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
-
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
@@ -157,11 +156,8 @@ if uploaded_image is not None:
             except Exception as e:
                 st.error(f"Error al cargar la imagen recortada: {e}")
         elif uploaded_image is not None:
-            try:
-                uploaded_image = Image.open(uploaded_image)
-                st.image(uploaded_image, use_container_width=True)
-            except Exception as e:
-                st.error(f"Error al cargar la imagen subida: {e}")
+            st.image(uploaded_image, use_container_width=True)
+
 
     with col2:
         if st.button("Predecir carta"):
