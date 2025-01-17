@@ -124,7 +124,8 @@ cropped_image = None
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
-    st.session_state.card_found = False
+    if 'card_found' not in st.session_state:
+        st.session_state.card_found = False
     
     # Inicializa el estado de la sesión para cropped_image
     if 'cropped_image' not in st.session_state:
@@ -151,7 +152,10 @@ if uploaded_image is not None:
         st.write("Carta subida")
         if st.session_state.cropped_image is not None:
             try:
-                cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
+                cropped_image_data = io.BytesIO(st.session_state.cropped_image)
+                cropped_image = Image.open(cropped_image_data)
+                cropped_image.verify()  # Verify that it is, in fact, an image
+                cropped_image = Image.open(cropped_image_data)  # Reopen after verify
                 st.image(cropped_image, use_container_width=True)
                 image_to_predict = load_and_preprocess_image(cropped_image)
             except Exception as e:
