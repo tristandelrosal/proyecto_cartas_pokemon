@@ -122,7 +122,7 @@ uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["
 cropped_image = None
 
 # Add a checkbox to control the visibility of the cropper
-show_cropper = st.toggle("Recortar imagen")
+# show_cropper = st.toggle("Recortar imagen")
 
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
@@ -158,9 +158,9 @@ if uploaded_image is not None:
     #             cropped_image = buf.getvalue()
 
 
-    if st.button("Predecir carta") and st.session_state.cropped_image is not None or uploaded_image is not None:
+    if st.button("Predecir carta"):
         # Use cropped_image if available, otherwise use uploaded_image
-        image_to_predict =  st.session_state.cropped_image if  st.session_state.cropped_image is not None else uploaded_image
+        image_to_predict =  st.session_state.cropped_image if st.session_state.cropped_image is not None else uploaded_image
         image_to_predict = load_and_preprocess_image(image_to_predict)
         
         if image_to_predict is not None:
