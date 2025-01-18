@@ -136,7 +136,7 @@ if uploaded_image is None:
     st.session_state.card_found = False
     st.session_state.cropped_image = None
     st.session_state.card = None
-    
+
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
@@ -162,19 +162,20 @@ if uploaded_image is not None:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Recortar imagen", use_container_width=True):
-            cropper(uploaded_image)
+        st.write("Carta subida")
         if st.session_state.cropped_image is not None:
             try:
                 cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
-                st.image(cropped_image, use_container_width=True, caption="Imagen recortada")
+                st.image(cropped_image, use_container_width=True)
                 image_to_predict = cropped_image
             except Exception as e:
                 st.error(f"Error al cargar la imagen recortada: {e}")
-        elif uploaded_image is not None:
-            st.image(uploaded_image, use_container_width=True, caption="Imagen subida")
+        else:
+            st.image(uploaded_image, use_container_width=True)
             image_to_predict = Image.open(io.BytesIO(uploaded_image))
         
+        if st.button("Recortar imagen", use_container_width=True):
+            cropper(uploaded_image)
 
     with col2:
         if st.button("Predecir carta", use_container_width=True):
@@ -190,13 +191,14 @@ if uploaded_image is not None:
                         # Fetch and display the card details
                         if st.session_state.card_id:
                             try:
-                                card = Card.find(st.session_state.card_id)
-                                st.image(card.images.large, use_container_width=True, caption="Carta encontrada")
+                                st.session_state.card = Card.find(st.session_state.card_id)
+                                st.image(st.session_state.card.images.large, use_container_width=True, caption="Carta encontrada")
                                 st.session_state.card_found = True
                             except Exception as e:
                                 st.error(f"Error fetching card: {e}")
             except Exception as e:
                 st.error(f"Error al procesar la imagen: {e}")
+
             
     # Fetch and display the card details
 if st.session_state.card_id:
