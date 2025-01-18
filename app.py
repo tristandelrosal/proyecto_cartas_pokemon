@@ -117,10 +117,26 @@ model = load_model(model_path)
 df = pd.read_csv('./data/cards_with_variations.csv')
 id_to_label = {i: label for i, label in enumerate(df['id'].astype('category').cat.categories)}
 
+# Inicializar variables
+if 'predicted_class' not in st.session_state:
+    st.session_state.predicted_class = None
+if 'card_id' not in st.session_state:
+    st.session_state.card_id = None
+if 'card' not in st.session_state:
+    st.session_state.card = None
+
 # Input for uploading an image
 uploaded_image = st.file_uploader("Sube una imagen de tu carta pokemon", type=["png", "jpg", "jpeg"])
 cropped_image = None
 
+# Reset session state if no image is uploaded
+if uploaded_image is None:
+    st.session_state.predicted_class = None
+    st.session_state.card_id = None
+    st.session_state.card_found = False
+    st.session_state.cropped_image = None
+    st.session_state.card = None
+    
 if uploaded_image is not None:
     uploaded_image = uploaded_image.read()
     
@@ -138,76 +154,83 @@ if uploaded_image is not None:
             if cropped_image is not None:
                 st.session_state.cropped_image = cropped_image
                 st.rerun()
-            if st.button("Continuar sin recortar"):
+            if st.button("Cancelar recorte"):
                 st.session_state.cropped_image = None
                 st.rerun()
         else:
             st.warning("Por favor, sube una imagen primero.")
 
-    if st.button("Recortar imagen"):
-        cropper(uploaded_image)
-
     col1, col2 = st.columns(2)
     with col1:
-        st.write("Carta subida")
+        if st.button("Recortar imagen", use_container_width=True):
+            cropper(uploaded_image)
         if st.session_state.cropped_image is not None:
             try:
                 cropped_image = Image.open(io.BytesIO(st.session_state.cropped_image))
-                st.image(cropped_image, use_container_width=True)
-                uploaded_card_path = './uploaded_cards/cropped_card.png'
-                cropped_image.save(uploaded_card_path)
+                st.image(cropped_image, use_container_width=True, caption="Imagen recortada")
+                image_to_predict = cropped_image
             except Exception as e:
                 st.error(f"Error al cargar la imagen recortada: {e}")
         elif uploaded_image is not None:
-            st.image(uploaded_image, use_container_width=True)
-            uploaded_card_path = './uploaded_cards/uploaded_card.png'
-            with open(uploaded_card_path, 'wb') as f:
-                f.write(uploaded_image)
+            st.image(uploaded_image, use_container_width=True, caption="Imagen subida")
+            image_to_predict = Image.open(io.BytesIO(uploaded_image))
+        
 
     with col2:
-        if st.button("Predecir carta"):
-            image_to_predict = load_and_preprocess_image(uploaded_card_path)
+        if st.button("Predecir carta", use_container_width=True):
             try:
                 if image_to_predict is not None:
-                    predicted_class = predict_card_id(image_to_predict, model)
-                    card_id = id_to_label[predicted_class]
+                    image_data = io.BytesIO()
+                    image_to_predict.save(image_data, format='PNG')
+                    image_data = image_data.getvalue()
+                    st.session_state.predicted_class = predict_card_id(image_data, model)
+                    if st.session_state.predicted_class is not None:
+                        st.session_state.card_id = id_to_label[st.session_state.predicted_class]
                     
-                    # Fetch and display the card details
-                    if card_id:
-                        try:
-                            card = Card.find(card_id)
-                            st.image(card.images.large, use_container_width=True)
-                            st.session_state.card_found = True
-                        except Exception as e:
-                            st.error(f"Error fetching card: {e}")
+                        # Fetch and display the card details
+                        if st.session_state.card_id:
+                            try:
+                                card = Card.find(st.session_state.card_id)
+                                st.image(card.images.large, use_container_width=True, caption="Carta encontrada")
+                                st.session_state.card_found = True
+                            except Exception as e:
+                                st.error(f"Error fetching card: {e}")
             except Exception as e:
                 st.error(f"Error al procesar la imagen: {e}")
             
+    # Fetch and display the card details
+if st.session_state.card_id:
+    try:
+        st.session_state.card = Card.find(st.session_state.card_id)
+        st.session_state.card_found = True
+    except Exception as e:
+        st.error(f"Error fetching card: {e}")
+
     if st.session_state.card_found:
-        if predicted_class is not None:
-            st.write(f"**Predicted Card ID:** {card_id}")   
-            st.write(f"**Name:** {card.name}")
-            st.write(f"**Set:** {card.set.name}")
-            st.write(f"**Type:** {', '.join(card.types)}")
-            st.write(f"**Rarity:** {card.rarity}")
-            st.write(f"**HP:** {card.hp}")
-            st.write(f"**Supertype:** {card.supertype}")
-            st.write(f"**Subtype:** {', '.join(card.subtypes)}")
+        if st.session_state.predicted_class is not None and st.session_state.card is not None:
+            st.write(f"**Predicted Card ID:** {st.session_state.card_id}")   
+            st.write(f"**Name:** {st.session_state.card.name}")
+            st.write(f"**Set:** {st.session_state.card.set.name}")
+            st.write(f"**Type:** {', '.join(st.session_state.card.types)}")
+            st.write(f"**Rarity:** {st.session_state.card.rarity}")
+            st.write(f"**HP:** {st.session_state.card.hp}")
+            st.write(f"**Supertype:** {st.session_state.card.supertype}")
+            st.write(f"**Subtype:** {', '.join(st.session_state.card.subtypes)}")
 
             # Display market price from TCGPlayer
             market_price = None
-            if hasattr(card, 'tcgplayer') and card.tcgplayer:
-                if hasattr(card.tcgplayer, 'prices') and card.tcgplayer.prices:
-                    if hasattr(card.tcgplayer.prices, 'normal') and card.tcgplayer.prices.normal:
-                        market_price = card.tcgplayer.prices.normal.market
+            if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
+                if hasattr(st.session_state.card.tcgplayer, 'prices') and st.session_state.card.tcgplayer.prices:
+                    if hasattr(st.session_state.card.tcgplayer.prices, 'normal') and st.session_state.card.tcgplayer.prices.normal:
+                        market_price = st.session_state.card.tcgplayer.prices.normal.market
 
             # If market price not found in TCGPlayer, check Cardmarket
-            if market_price is None and hasattr(card, 'cardmarket') and card.cardmarket:
-                if hasattr(card.cardmarket, 'prices') and card.cardmarket.prices:
-                    market_price = card.cardmarket.prices.averageSellPrice
+            if market_price is None and hasattr(st.session_state.card, 'cardmarket') and st.session_state.card.cardmarket:
+                if hasattr(st.session_state.card.cardmarket, 'prices') and st.session_state.card.cardmarket.prices:
+                    market_price = st.session_state.card.cardmarket.prices.averageSellPrice
                     
                     
-            prices = get_card_prices_by_id(card_id)
+            prices = get_card_prices_by_id(st.session_state.card_id)
             
             if prices:
                 st.success("Precios obtenidos:")
@@ -218,8 +241,8 @@ if uploaded_image is not None:
                 "Precio (€)": list(prices.values())
             })
 
-                print(df["Precio (€)"].apply(type))
-                print(df["Tipo de precio"].apply(type))                    
+                # Convertir los valores de la columna "Precio (€)" a números
+                df["Precio (€)"] = df["Precio (€)"].str.replace('€', '').astype(float)
 
                 # Ordenar los datos por 'Precio (€)' en orden ascendente
                 df = df.sort_values(by="Precio (€)", ascending=True)
@@ -255,11 +278,9 @@ if uploaded_image is not None:
                     xaxis=dict(showgrid=False)
                 )
 
-                # Mostrar la gráfica en Streamlit
-                st.plotly_chart(fig, use_container_width=True)
+                # Mostrar la gráfica en Streamlit con un key único
+                st.plotly_chart(fig, use_container_width=True, key="plotly_chart_1")
 
-                    # Mostrar la gráfica en Streamlit
-                st.plotly_chart(fig, use_container_width=True)
             else:
                 st.write("No se encontraron precios.")
 
