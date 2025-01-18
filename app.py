@@ -209,40 +209,44 @@ if st.session_state.card_id:
     if st.session_state.card_found:
         if st.session_state.predicted_class is not None and st.session_state.card is not None:
             
-            tab, tab2 = st.tabs(["Información de la carta predecida", "Gráfica de precio"])
+            tab, tab2 = st.tabs(["Información de la carta", "Gráfica de precio"])
 
             # Agregar contenido a cada pestaña
             with tab:
-                st.write("Contenido de la primera pestaña")
-                
-                st.write(f"**Predicted Card ID:** {st.session_state.card_id}") 
-                st.write(f"**Name:** {st.session_state.card.name}")
-                st.write(f"**Set:** {st.session_state.card.set.name}")
-                st.write(f"**Type:** {', '.join(st.session_state.card.types)}")
-                st.write(f"**Rarity:** {st.session_state.card.rarity}")
-                st.write(f"**HP:** {st.session_state.card.hp}")
-                st.write(f"**Supertype:** {st.session_state.card.supertype}")
-                st.write(f"**Subtype:** {', '.join(st.session_state.card.subtypes)}")
+                col1, col2 = st.columns(2)
 
-                # Display market price from TCGPlayer
-                market_price = None
-                if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
-                    if hasattr(st.session_state.card.tcgplayer, 'prices') and st.session_state.card.tcgplayer.prices:
-                        if hasattr(st.session_state.card.tcgplayer.prices, 'normal') and st.session_state.card.tcgplayer.prices.normal:
-                            market_price = st.session_state.card.tcgplayer.prices.normal.market
+                with col1:
 
-                # If market price not found in TCGPlayer, check Cardmarket
-                if market_price is None and hasattr(st.session_state.card, 'cardmarket') and st.session_state.card.cardmarket:
-                    if hasattr(st.session_state.card.cardmarket, 'prices') and st.session_state.card.cardmarket.prices:
-                        market_price = st.session_state.card.cardmarket.prices.averageSellPrice
-                        
-                if market_price:
-                    st.write(f"**Market Price:** ${market_price}")
-                else:
-                    st.write("Market price not available.")
+                    st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
+                    st.write(f"**Nombre:** {st.session_state.card.name}")
+                    st.write(f"**Set:** {st.session_state.card.set.name}")
+                    st.write(f"**Tipo:** {', '.join(st.session_state.card.types)}")
+                    st.write(f"**Rareza:** {st.session_state.card.rarity}")
+                    
+                with col2:
+
+                    st.write(f"**HP:** {st.session_state.card.hp}")
+                    st.write(f"**Tipo de carta:** {st.session_state.card.supertype}")
+                    st.write(f"**Categoria:** {', '.join(st.session_state.card.subtypes)}")
+
+                    # Display market price from TCGPlayer
+                    market_price = None
+                    if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
+                        if hasattr(st.session_state.card.tcgplayer, 'prices') and st.session_state.card.tcgplayer.prices:
+                            if hasattr(st.session_state.card.tcgplayer.prices, 'normal') and st.session_state.card.tcgplayer.prices.normal:
+                                market_price = st.session_state.card.tcgplayer.prices.normal.market
+
+                    # If market price not found in TCGPlayer, check Cardmarket
+                    if market_price is None and hasattr(st.session_state.card, 'cardmarket') and st.session_state.card.cardmarket:
+                        if hasattr(st.session_state.card.cardmarket, 'prices') and st.session_state.card.cardmarket.prices:
+                            market_price = st.session_state.card.cardmarket.prices.averageSellPrice
+                            
+                    if market_price:
+                        st.write(f"**Market Price:** ${market_price}")
+                    else:
+                        st.write("Market price not available.")
                     
             with tab2:
-                st.write("Contenido de la segunda pestaña")
                 prices = get_card_prices_by_id(st.session_state.card_id)
                 
                 if prices:                
