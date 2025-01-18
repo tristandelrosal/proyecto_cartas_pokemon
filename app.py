@@ -215,17 +215,18 @@ if st.session_state.card_id:
             with tab:
                 col1, col2 = st.columns(2)
 
-                st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
+                
 
                 with col1:
-
+                    
+                    st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
                     st.write(f"**Nombre:** {st.session_state.card.name}")
                     st.write(f"**Set:** {st.session_state.card.set.name}")
                     st.write(f"**Tipo:** {', '.join(st.session_state.card.types)}")
                     st.write(f"**Rareza:** {st.session_state.card.rarity}")
+
                     
                 with col2:
-
                     st.write(f"**HP:** {st.session_state.card.hp}")
                     st.write(f"**Tipo de carta:** {st.session_state.card.supertype}")
                     st.write(f"**Categoria:** {', '.join(st.session_state.card.subtypes)}")
