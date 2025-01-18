@@ -230,7 +230,7 @@ if st.session_state.card_id:
                     st.write(f"**HP:** {st.session_state.card.hp}")
                     st.write(f"**Tipo de carta:** {st.session_state.card.supertype}")
                     st.write(f"**Categoria:** {', '.join(st.session_state.card.subtypes)}")
-
+                    
                     # Display market price from TCGPlayer
                     market_price = None
                     if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
