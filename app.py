@@ -215,9 +215,10 @@ if st.session_state.card_id:
             with tab:
                 col1, col2 = st.columns(2)
 
+                st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
+
                 with col1:
 
-                    st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
                     st.write(f"**Nombre:** {st.session_state.card.name}")
                     st.write(f"**Set:** {st.session_state.card.set.name}")
                     st.write(f"**Tipo:** {', '.join(st.session_state.card.types)}")
@@ -268,7 +269,7 @@ if st.session_state.card_id:
                         x="Tipo de precio",
                         y="Precio (€)",
                         text="Precio (€)",
-                        title="Precios de la carta según el tipo",
+                        title="Precios de la carta",
                         labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
                         color="Precio (€)",  # Colorear barras según su valor
                         color_continuous_scale="Blues"
