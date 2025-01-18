@@ -210,87 +210,97 @@ if st.session_state.card_id:
 
     if st.session_state.card_found:
         if st.session_state.predicted_class is not None and st.session_state.card is not None:
-            st.write(f"**Predicted Card ID:** {st.session_state.card_id}")   
-            st.write(f"**Name:** {st.session_state.card.name}")
-            st.write(f"**Set:** {st.session_state.card.set.name}")
-            st.write(f"**Type:** {', '.join(st.session_state.card.types)}")
-            st.write(f"**Rarity:** {st.session_state.card.rarity}")
-            st.write(f"**HP:** {st.session_state.card.hp}")
-            st.write(f"**Supertype:** {st.session_state.card.supertype}")
-            st.write(f"**Subtype:** {', '.join(st.session_state.card.subtypes)}")
-
-            # Display market price from TCGPlayer
-            market_price = None
-            if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
-                if hasattr(st.session_state.card.tcgplayer, 'prices') and st.session_state.card.tcgplayer.prices:
-                    if hasattr(st.session_state.card.tcgplayer.prices, 'normal') and st.session_state.card.tcgplayer.prices.normal:
-                        market_price = st.session_state.card.tcgplayer.prices.normal.market
-
-            # If market price not found in TCGPlayer, check Cardmarket
-            if market_price is None and hasattr(st.session_state.card, 'cardmarket') and st.session_state.card.cardmarket:
-                if hasattr(st.session_state.card.cardmarket, 'prices') and st.session_state.card.cardmarket.prices:
-                    market_price = st.session_state.card.cardmarket.prices.averageSellPrice
-                    
-                    
-            prices = get_card_prices_by_id(st.session_state.card_id)
             
-            if prices:
-                st.success("Precios obtenidos:")
+            tab, tab2 = st.tabs(["Información de la carta", "Gráfica de precio"])
+
+            # Agregar contenido a cada pestaña
+            with tab:
+                col1, col2 = st.columns(2)
+
                 
-                # Crear un DataFrame para la gráfica
-                df = pd.DataFrame({
-                "Tipo de precio": list(prices.keys()),
-                "Precio (€)": list(prices.values())
-            })
 
-                # Convertir los valores de la columna "Precio (€)" a números
-                df["Precio (€)"] = df["Precio (€)"].str.replace('€', '').astype(float)
+                with col1:
+                    
+                    st.write(f"**ID de la carta predecida:** {st.session_state.card_id}") 
+                    st.write(f"**Nombre:** {st.session_state.card.name}")
+                    st.write(f"**Set:** {st.session_state.card.set.name}")
+                    st.write(f"**Tipo:** {', '.join(st.session_state.card.types)}")
+                    st.write(f"**Rareza:** {st.session_state.card.rarity}")
 
-                # Ordenar los datos por 'Precio (€)' en orden ascendente
-                df = df.sort_values(by="Precio (€)", ascending=True)
+                    
+                with col2:
+                    st.write(f"**HP:** {st.session_state.card.hp}")
+                    st.write(f"**Tipo de carta:** {st.session_state.card.supertype}")
+                    st.write(f"**Categoria:** {', '.join(st.session_state.card.subtypes)}")
+                    
+                    # Display market price from TCGPlayer
+                    market_price = None
+                    if hasattr(st.session_state.card, 'tcgplayer') and st.session_state.card.tcgplayer:
+                        if hasattr(st.session_state.card.tcgplayer, 'prices') and st.session_state.card.tcgplayer.prices:
+                            if hasattr(st.session_state.card.tcgplayer.prices, 'normal') and st.session_state.card.tcgplayer.prices.normal:
+                                market_price = st.session_state.card.tcgplayer.prices.normal.market
 
-                # Crear la gráfica de barras con Plotly
-                fig = px.bar(
-                    df,
-                    x="Tipo de precio",
-                    y="Precio (€)",
-                    text="Precio (€)",
-                    title="Precios de la carta según el tipo",
-                    labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
-                    color="Precio (€)",  # Colorear barras según su valor
-                    color_continuous_scale="Blues"
-                )
+                    # If market price not found in TCGPlayer, check Cardmarket
+                    if market_price is None and hasattr(st.session_state.card, 'cardmarket') and st.session_state.card.cardmarket:
+                        if hasattr(st.session_state.card.cardmarket, 'prices') and st.session_state.card.cardmarket.prices:
+                            market_price = st.session_state.card.cardmarket.prices.averageSellPrice
+                            
+                    if market_price:
+                        st.write(f"**Market Price:** ${market_price}")
+                    else:
+                        st.write("Market price not available.")
+                    
+            with tab2:
+                prices = get_card_prices_by_id(st.session_state.card_id)
+                
+                if prices:                
+                    # Crear un DataFrame para la gráfica
+                    df = pd.DataFrame({
+                    "Tipo de precio": list(prices.keys()),
+                    "Precio (€)": list(prices.values())
+                })
 
-                # Ajustar la posición del texto y formato
-                fig.update_traces(
-                    texttemplate="€ %{y:.2f}",
-                    textposition="outside",
-                )
+                    # Convertir los valores de la columna "Precio (€)" a números
+                    df["Precio (€)"] = df["Precio (€)"].str.replace('€', '').astype(float)
 
-                # Asegurarse de que el eje Y empiece desde 0
-                fig.update_layout(
-                    xaxis_title="Tipo de Precio",
-                    yaxis_title="Precio (€)",
-                    uniformtext_minsize=8,
-                    uniformtext_mode="hide",
-                    yaxis=dict(
-                        showgrid=True,
-                        range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
-                    ),
-                    xaxis=dict(showgrid=False)
-                )
+                    # Ordenar los datos por 'Precio (€)' en orden ascendente
+                    df = df.sort_values(by="Precio (€)", ascending=True)
 
-                # Mostrar la gráfica en Streamlit con un key único
-                st.plotly_chart(fig, use_container_width=True, key="plotly_chart_1")
+                    # Crear la gráfica de barras con Plotly
+                    fig = px.bar(
+                        df,
+                        x="Tipo de precio",
+                        y="Precio (€)",
+                        text="Precio (€)",
+                        title="Precios de la carta",
+                        labels={"Precio (€)": "Precio en €", "Tipo de precio": "Tipo de Precio"},
+                        color="Precio (€)",  # Colorear barras según su valor
+                        color_continuous_scale="Blues"
+                    )
 
-            else:
-                st.write("No se encontraron precios.")
+                    # Ajustar la posición del texto y formato
+                    fig.update_traces(
+                        texttemplate="€ %{y:.2f}",
+                        textposition="outside",
+                    )
 
+                    # Asegurarse de que el eje Y empiece desde 0
+                    fig.update_layout(
+                        xaxis_title="Tipo de Precio",
+                        yaxis_title="Precio (€)",
+                        uniformtext_minsize=8,
+                        uniformtext_mode="hide",
+                        yaxis=dict(
+                            showgrid=True,
+                            range=[0, df["Precio (€)"].max() * 1.1]  # Establecer el rango desde 0 hasta un poco más del máximo
+                        ),
+                        xaxis=dict(showgrid=False)
+                    )
 
-            if market_price:
-                    st.write(f"**Market Price:** ${market_price}")
-            else:
-                    st.write("Market price not available.")
-        
+                    # Mostrar la gráfica en Streamlit con un key único
+                    st.plotly_chart(fig, use_container_width=True, key="plotly_chart_1")
+
+                else:
+                    st.write("No se encontraron precios.")
         else:
             st.error("Prediction failed. Please try again with a different image.")
